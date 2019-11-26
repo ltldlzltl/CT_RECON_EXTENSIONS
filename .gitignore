@@ -1,3 +1,5 @@
+*.raw
+temp/*
 .vscode/*
 __pycache__/*
 vs/*
