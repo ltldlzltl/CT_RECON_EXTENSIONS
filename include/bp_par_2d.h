@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-22 19:30:16
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-26 14:43:47
+ * @LastEditTime: 2019-11-26 15:39:33
  */
 
 #ifndef _CT_RECON_EXT_BP_PAR_2D_H_
@@ -195,7 +195,7 @@ class ParallelBackprojection2DPixDrivenGrad
 public:
     // Ctor and Dtor
     ParallelBackprojection2DPixDrivenGrad(const ParallelBackprojection2DParam& param)
-        : ParallelBackprojection2DGrad(param)
+        : ParallelBackprojection2DGrad<T>(param)
     {}
     ~ParallelBackprojection2DPixDrivenGrad() {}
     // utility functions

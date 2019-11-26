@@ -1,9 +1,9 @@
 /*
- * @Description: GPU implementation of fp_par_2d.h
+ * @Description: GPU implementation of bp_par_2d.h
  * @Author: Tianling Lyu
  * @Date: 2019-11-24 10:36:05
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-24 11:08:16
+ * @LastEditTime: 2019-11-26 15:50:08
  */
 
 #include "include/bp_par_2d.h"
@@ -17,6 +17,8 @@
 #define M_PI_4 M_PI/4
 #endif
 
+#define MAX(x, y) (x>y) ? x : y
+
 namespace ct_recon
 {
 
@@ -24,7 +26,7 @@ __global__ void ParallelBackprojection2DPixDrivenPrepKernel(double* xcos,
     double* ysin, const ParallelBackprojection2DParam param, 
     const int n_elements)
 {
-    unsigned int length = param.nx > param.ny ? param.nx : param.ny;
+    unsigned int length = MAX(param.nx, param.ny);
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
         int ia = thread_id % length;
         int ipos = thread_id / length;
@@ -50,10 +52,11 @@ __global__ void ParallelBackprojection2DPixDrivenPrepKernel(double* xcos,
 bool ParallelBackprojection2DPixDrivenPrep::calculate_on_gpu(double* xcos,
     double* ysin, int* buffer, cudaStream_t stream) const
 {
-    CudaLaunchConfig config = GetCudaLaunchConfig(param_.na);
+    int n_elements = param_.na * MAX(param_.nx, param_.ny);
+    CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
     ParallelBackprojection2DPixDrivenPrepKernel
         <<<config.block_count, config.thread_per_block, 0, stream>>>
-        (xcos, ysin, param_, param_.na);
+        (xcos, ysin, param_, n_elements);
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
@@ -68,10 +71,11 @@ __global__ void ParallelBackprojection2DPixDrivenKernel(const T* proj,
         int iy = n_elements / param.nx;
         double cents = (static_cast<double>(param.ns-1)) / 2 + 
             param.offset_s;
-        double s, is1, is2, u;
+        double s, u;
+        int is1, is2;
         double sum = 0;
-        double *xcos_ptr = xcos + ix * param.na;
-        double *ysin_ptr = ysin + iy * param.na;
+        const double *xcos_ptr = xcos + ix * param.na;
+        const double *ysin_ptr = ysin + iy * param.na;
         const T* proj_ptr = proj;
         // backprojection
         for (unsigned int ia = 0; ia < param.na; ++ia) {
@@ -96,11 +100,11 @@ bool ParallelBackprojection2DPixDriven<float>::calculate_on_gpu(const float* pro
 	float* img, const double* xcos, const double* ysin, const int* buffer, 
     cudaStream_t stream) const
 {
-    int n_elements = param_.nx*param_.ny;
+    int n_elements = this->param_.nx*this->param_.ny;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
     ParallelBackprojection2DPixDrivenKernel<float>
         <<<config.block_count, config.thread_per_block, 0, stream>>>
-        (proj, img, xcos, ysin, param_, n_elements);
+        (proj, img, xcos, ysin, this->param_, n_elements);
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
@@ -110,11 +114,134 @@ bool ParallelBackprojection2DPixDriven<double>::calculate_on_gpu(const double* p
 	double* img, const double* xcos, const double* ysin, const int* buffer, 
     cudaStream_t stream) const
 {
-    int n_elements = param_.nx*param_.ny;
+    int n_elements = this->param_.nx*this->param_.ny;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-    ParallelBackprojection2DPixDrivenKernel<float>
+    ParallelBackprojection2DPixDrivenKernel<double>
         <<<config.block_count, config.thread_per_block, 0, stream>>>
-        (proj, img, xcos, ysin, param_, n_elements);
+        (proj, img, xcos, ysin, this->param_, n_elements);
+	cudaError_t err = cudaDeviceSynchronize();
+    return err==cudaSuccess;
+}
+
+__global__ void ParallelBackprojection2DPixDrivenGradPrepKernel(double* begins, 
+    double* offsets, bool* usex, const ParallelBackprojection2DParam param, 
+    const int n_elements)
+{
+    for (int thread_id : CudaGridRangeX<int>(n_elements)) {
+        unsigned int ia = thread_id, is;
+        double angle = param.orbit_start + ia * param.orbit;
+        double sin_angle = sin(angle);
+        double cos_angle = cos(angle);
+        double* begin_ptr = begins + ia * param.ns;
+        // useful constants
+        const double cents = (static_cast<double>(param.ns-1)) / 2 + 
+            param.offset_s;
+        const double centx = (static_cast<double>(param.nx-1)) / 2 + 
+            param.offset_x;
+        const double centy = (static_cast<double>(param.ny-1)) / 2 + 
+            param.offset_y;
+        // adjust angle to range [0, 2*pi)
+        while (angle < 0) angle += 2*M_PI;
+        while (angle >= 2*M_PI) angle -= 2*M_PI;
+        bool b_usex = !((angle >= M_PI_4 && angle < 3*M_PI_4) ||
+            (angle >= 5*M_PI_4 && angle < 7*M_PI_4));
+        usex[ia] = b_usex;
+        double offset1, offset2, begin;
+        if (b_usex) {
+            offset1 = param.ds / (cos_angle * param.dx);
+            offset2 = param.dy * sin_angle / (cos_angle * param.dx);
+            begin = centx - centy * offset2 - cents * offset1;
+        } else {
+            offset1 = param.ds / (sin_angle * param.dy);
+            offset2 = param.dx * cos_angle / (sin_angle * param.dy);
+            begin = centy - centx * offset2 - cents * offset1;
+        }
+        offsets[ia] = offset2;
+        for (is = 0; is < param.ns; ++is) {
+            *begin_ptr = begin;
+            begin += offset1;
+            ++begin_ptr;
+        }
+    }
+    return;
+}
+
+bool ParallelBackprojection2DPixDrivenGradPrep::calculate_on_gpu(double* begins,
+    double* offsets, bool* usex, cudaStream_t stream) const
+{
+    int n_elements = param_.na;
+    CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
+    ParallelBackprojection2DPixDrivenGradPrepKernel
+        <<<config.block_count, config.thread_per_block, 0, stream>>>
+        (begins, offsets, usex, param_, n_elements);
+	cudaError_t err = cudaDeviceSynchronize();
+    return err==cudaSuccess;
+}
+
+template <typename T>
+__global__ void ParallelBackprojection2DPixDrivenGradKernel(const T* img, 
+    T* grad, const double* begins, const double* offsets, const bool* usex, 
+    const ParallelBackprojection2DParam param, const int n_elements)
+{
+    for (int thread_id : CudaGridRangeX<int>(n_elements)) {
+        // variables
+        const int ia = n_elements / param.ns;
+        const int is = n_elements % param.ns;
+        unsigned int i, j, unit1, unit2, range1, range2;
+        double sum = 0.0, u, left, right;
+        bool b_usex = usex[ia];
+        double offset = offsets[ia];
+        double pos = begins[thread_id];
+        // to eliminate the difference between using x and y direction
+        unit1 = b_usex ? 1 : param.nx;
+        unit2 = b_usex ? param.nx : 1;
+        range1 = b_usex ? param.nx : param.ny;
+        range2 = b_usex ? param.ny : param.nx;
+        left = (is == 0) ? pos : begins[thread_id + 1];
+        right = (is == param.ns-1) ? pos : begins[thread_id - 1];
+        double length = (is == 0) ? begins[thread_id + 1] - pos : 
+            pos - begins[thread_id - 1];
+        // accumulate gradient
+        for (i = 0; i < range2; ++i) {
+            for (j = ceil(left); j <= right; ++j) {
+                if (j < 0 || j >= range1) continue;
+                u = fabs((j - pos) / length);
+                sum += (1-u) * img[j*unit1 + i*unit2];
+            }
+            pos += offset;
+            left += offset;
+            right += offset;
+        }
+        // write to destination
+        grad[thread_id] = sum * param.orbit;
+    }
+    return;
+}
+
+template <>
+bool ParallelBackprojection2DPixDrivenGrad<float>::calculate_on_gpu(const float* img, 
+	float* grad, const double* begins, const double* offsets, const bool* usex, 
+    cudaStream_t stream) const
+{
+    int n_elements = this->param_.ns*this->param_.na;
+    CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
+    ParallelBackprojection2DPixDrivenGradKernel<float>
+        <<<config.block_count, config.thread_per_block, 0, stream>>>
+        (img, grad, begins, offsets, usex, param_, n_elements);
+	cudaError_t err = cudaDeviceSynchronize();
+    return err==cudaSuccess;
+}
+
+template <>
+bool ParallelBackprojection2DPixDrivenGrad<double>::calculate_on_gpu(const double* img, 
+	double* grad, const double* begins, const double* offsets, const bool* usex, 
+    cudaStream_t stream) const
+{
+    int n_elements = this->param_.ns*this->param_.na;
+    CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
+    ParallelBackprojection2DPixDrivenGradKernel<double>
+        <<<config.block_count, config.thread_per_block, 0, stream>>>
+        (img, grad, begins, offsets, usex, this->param_, n_elements);
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
