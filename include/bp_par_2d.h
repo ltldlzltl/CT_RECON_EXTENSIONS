@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-22 19:30:16
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-24 14:03:07
+ * @LastEditTime: 2019-11-26 14:43:47
  */
 
 #ifndef _CT_RECON_EXT_BP_PAR_2D_H_
@@ -105,9 +105,9 @@ public:
 	virtual ~ParallelBackprojection2DGradPrep() {}
 	// utility virtual functions
 	virtual bool calculate_on_cpu(double* buffer1, double* buffer2,
-		int* buffer3) const = 0;
+		bool* buffer3) const = 0;
 	virtual bool calculate_on_gpu(double* buffer1, double* buffer2,
-		int* buffer3, cudaStream_t) const = 0;
+		bool* buffer3, cudaStream_t) const = 0;
 
 protected:
 	ParallelBackprojection2DParam param_;
@@ -125,9 +125,9 @@ public:
     virtual ~ParallelBackprojection2DGrad() {}
     // utility functions
     virtual bool calculate_on_cpu(const T* proj, T* img, const double*, 
-        const double*, const int*) const = 0;
+        const double*, const bool*) const = 0;
     virtual bool calculate_on_gpu(const T* proj, T* img, const double*, 
-        const double*, const int*, cudaStream_t) const = 0;
+        const double*, const bool*, cudaStream_t) const = 0;
 
 protected:
     ParallelBackprojection2DParam param_;
@@ -171,6 +171,39 @@ public:
     bool calculate_on_gpu(const T* proj, T* img, const double* xcos, 
         const double* ysin, const int*, cudaStream_t) const override;
 }; // class ParallelBackprojection2DPixDriven
+
+class ParallelBackprojection2DPixDrivenGradPrep
+    : public ParallelBackprojection2DGradPrep
+{
+public:
+	// Ctor and Dtor
+	ParallelBackprojection2DPixDrivenGradPrep(const ParallelBackprojection2DParam& param)
+		: ParallelBackprojection2DGradPrep(param)
+	{}
+	~ParallelBackprojection2DPixDrivenGradPrep() {}
+	// utility virtual functions
+	bool calculate_on_cpu(double* begins, double* offsets,
+		bool* usex) const override;
+	bool calculate_on_gpu(double* begins, double* offsets,
+		bool* usex, cudaStream_t) const override;
+}; // class ParallelBackprojection2DPixDrivenGradPrep
+
+template <typename T>
+class ParallelBackprojection2DPixDrivenGrad
+    : public ParallelBackprojection2DGrad<T>
+{
+public:
+    // Ctor and Dtor
+    ParallelBackprojection2DPixDrivenGrad(const ParallelBackprojection2DParam& param)
+        : ParallelBackprojection2DGrad(param)
+    {}
+    ~ParallelBackprojection2DPixDrivenGrad() {}
+    // utility functions
+    bool calculate_on_cpu(const T* img, T* grad, const double*, 
+        const double*, const bool*) const override;
+    bool calculate_on_gpu(const T* img, T* grad, const double*, 
+        const double*, const bool*, cudaStream_t) const override;
+}; // class ParallelBackprojection2DPixDrivenGrad
 
 } // namespace ct_recon
 
