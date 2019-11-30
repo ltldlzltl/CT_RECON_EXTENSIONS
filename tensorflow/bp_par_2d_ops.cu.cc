@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 15:14:53
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-28 15:19:58
+ * @LastEditTime: 2019-11-30 11:33:54
  */
 
 #include "tensorflow/bp_par_2d_ops.h"
@@ -20,7 +20,7 @@ namespace tensorflow
 {
 // partial specializations for GPU devices
 bool LaunchBpPar2DPrepOp<Eigen::GpuDevice>::operator()(OpKernelContext *ctx, double *buffer1, double *buffer2,
-                                                       int *buffer3, const ct_recon::ParallelBackprojection2DPrep *prep)
+                                                       int *buffer3, const ct_recon::ParallelBackprojection2DPrepare *prep)
 {
     auto device = ctx->eigen_gpu_device();
     return prep->calculate_on_gpu(buffer1, buffer2, buffer3,
@@ -52,7 +52,7 @@ template struct LaunchBpPar2DOp<Eigen::GpuDevice, float>;
 template struct LaunchBpPar2DOp<Eigen::GpuDevice, double>;
 
 bool LaunchBpPar2DGradPrepOp<Eigen::GpuDevice>::operator()(OpKernelContext *ctx, double *buffer1, double *buffer2,
-                                                           bool *buffer3, const ct_recon::ParallelBackprojection2DGradPrepare *prep)
+                                                           bool *buffer3, const ct_recon::ParallelBackprojection2DGradPrep *prep)
 {
     auto device = ctx->eigen_gpu_device();
     return prep->calculate_on_gpu(buffer1, buffer2, buffer3,

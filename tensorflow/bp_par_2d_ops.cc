@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-27 09:04:26
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-27 22:06:52
+ * @LastEditTime: 2019-11-30 11:25:45
  */
 
 #include "tensorflow/bp_par_2d_ops.h"
@@ -152,14 +152,14 @@ public:
             fov);
         if (method == "pixdriven") {
             // use make_unique() after c++14
-            bp_prep_ = std::unique_ptr<ct_recon::ParallelBackprojection2DPixDrivenPrep>
-                (new ct_recon::ParallelProjection2DRayCastingPrepare(param_));
-            bp_ = std::unique_ptr<ct_recon::ParallelBackprojection2DPixDriven<T>>
-                (new ct_recon::ParallelProjection2DRayCasting<T>(param_));
+            bp_prep_ = std::unique_ptr<ct_recon::ParallelBackprojection2DPrepare>
+                (new ct_recon::ParallelBackprojection2DPixDrivenPrep(param_));
+            bp_ = std::unique_ptr<ct_recon::ParallelBackprojection2D<T>>
+                (new ct_recon::ParallelBackprojection2DPixDriven<T>(param_));
             // allocate memory for buffers
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.nx, param_.na}), &buffer1_, nullptr);
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.ny, param_.na}), &buffer2_, nullptr);
-            context->allocate_persistent(DT_INT, TensorShape({1}), &buffer3_, nullptr);
+            context->allocate_persistent(DT_INT32, TensorShape({1}), &buffer3_, nullptr);
         } else {
             context->CtxFailure(__FILE__, __LINE__,
                                 errors::InvalidArgument("Unrecognised backprojection method. \
@@ -183,7 +183,7 @@ public:
         
         // initialize if needed
         if (!initialized_) {
-            LaunchFpPar2DPrepOp<Device>()(context, 
+            LaunchBpPar2DPrepOp<Device>()(context, 
                 buffer1_.AccessTensor(context)->template flat<double>().data(), 
                 buffer2_.AccessTensor(context)->template flat<double>().data(), 
                 buffer3_.AccessTensor(context)->template flat<int>().data(), 
@@ -257,15 +257,15 @@ public:
         ::std::string method;
         OP_REQUIRES_OK(context, context->GetAttr("method", &method));
         // construct private parameters and functors
-        param_ = ct_recon::ParallelProjection2DParam(proj_shape[1], proj_shape[0], 
+        param_ = ct_recon::ParallelBackprojection2DParam(proj_shape[1], proj_shape[0], 
             channel_space, orbit, channel_offset, orbit_start, img_shape[1], 
             img_shape[0], img_space[1], img_space[0], img_offset[1], img_offset[0], 
             fov);
         if (method == "pixdriven") {
-            grad_prep_ = std::unique_ptr<ct_recon::ParallelProjection2DRayDrivenGradPrep>
-                (new ct_recon::ParallelProjection2DRayDrivenGradPrep(param_));
-            gradient_ = std::unique_ptr<ct_recon::ParallelProjection2DRayDrivenGrad<T>>
-                (new ct_recon::ParallelProjection2DRayDrivenGrad<T>(param_));
+            grad_prep_ = std::unique_ptr<ct_recon::ParallelBackprojection2DGradPrep>
+                (new ct_recon::ParallelBackprojection2DPixDrivenGradPrep(param_));
+            gradient_ = std::unique_ptr<ct_recon::ParallelBackprojection2DGrad<T>>
+                (new ct_recon::ParallelBackprojection2DPixDrivenGrad<T>(param_));
             // allocate memory for buffers
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na, param_.ns}), &buffer1_, nullptr);
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na}), &buffer2_, nullptr);
@@ -293,7 +293,7 @@ public:
         
         // initialize if needed
         if (!initialized_) {
-            LaunchFpPar2DGradPrepOp<Device>()(context, 
+            LaunchBpPar2DGradPrepOp<Device>()(context, 
                 buffer1_.AccessTensor(context)->template flat<double>().data(), 
                 buffer2_.AccessTensor(context)->template flat<double>().data(), 
                 buffer3_.AccessTensor(context)->template flat<bool>().data(), 
@@ -306,7 +306,7 @@ public:
         Tensor* output = nullptr;
         // allocate result tensor
         OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &output));
-        LaunchFpPar2DGradOp<Device, T>()(context, input.template flat<T>().data(), 
+        LaunchBpPar2DGradOp<Device, T>()(context, input.template flat<T>().data(), 
             output->template flat<T>().data(), 
             buffer1_.AccessTensor(context)->template flat<double>().data(), 
             buffer2_.AccessTensor(context)->template flat<double>().data(), 

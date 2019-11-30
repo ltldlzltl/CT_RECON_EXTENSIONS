@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-26 15:56:29
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-26 16:15:48
+ * @LastEditTime: 2019-11-30 11:27:56
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_BP_PAR_2D_OPS_H_
@@ -18,7 +18,7 @@ namespace tensorflow
 
 // Functor for backprojection preparation
 template <typename Device>
-struct LaunchFpPar2DPrepOp {
+struct LaunchBpPar2DPrepOp {
     bool operator()(OpKernelContext* ctx, double* buffer1, double* buffer2, 
         int* buffer3, const ct_recon::ParallelBackprojection2DPrepare* prep)
     {
@@ -62,7 +62,7 @@ struct LaunchBpPar2DGradPrepOp {
 template <typename Device, typename T>
 struct LaunchBpPar2DGradOp {
     bool operator()(OpKernelContext* ctx, const T* img, T* grad, 
-        const double* buffer1, const double* buffer2, const int* buffer3, 
+        const double* buffer1, const double* buffer2, const bool* buffer3, 
         ct_recon::ParallelBackprojection2DGrad<T> *bp_grad, const int nbatch, 
         const unsigned int sizeimg, const unsigned int sizeproj)
     {
@@ -73,8 +73,8 @@ struct LaunchBpPar2DGradOp {
         for (int ibatch = 0; ibatch < nbatch; ++ibatch) {
             result &= bp_grad->calculate_on_cpu(img_ptr, grad_ptr, buffer1, 
                 buffer2, buffer3);
-            grad_ptr += size_proj;
-            img_ptr += size_img;
+            grad_ptr += sizeproj;
+            img_ptr += sizeimg;
         }
         return result;
     }
