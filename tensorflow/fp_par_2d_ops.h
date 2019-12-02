@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-19 11:37:41
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-21 11:01:37
+ * @LastEditTime: 2019-12-01 10:38:11
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_FP_PAR_2D_OPS_H_
@@ -83,7 +83,6 @@ struct LaunchFpPar2DGradOp {
 }; // struct LaunchFpPar2DGradOp
 
 #if GOOGLE_CUDA
-#define EIGEN_USE_GPU
 // partial specializations for GPU devices
 template <>
 struct LaunchFpPar2DPrepOp<Eigen::GpuDevice> {
