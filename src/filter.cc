@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 14:43:27
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-30 21:38:32
+ * @LastEditTime: 2019-12-02 12:23:57
  */
 
 #include "include/filter.h"
@@ -55,7 +55,7 @@ bool ramp_fan(T* filter, const FilterParam& param)
 }
 
 template <typename T>
-bool RampFilterPrep<T>::calculate_on_cpu(T* filter)
+bool RampFilterPrep<T>::calculate_on_cpu(T* filter) const
 {
     if (param_.type == "par" || param_.type == "flat") {
         if (!ramp_par(filter, param_)) return false;
@@ -71,7 +71,7 @@ template class RampFilterPrep<float>;
 template class RampFilterPrep<double>;
 
 template <typename T>
-bool RampFilter<T>::calculate_on_cpu(const T* in, const T* filter, T* out)
+bool RampFilter<T>::calculate_on_cpu(const T* in, const T* filter, T* out) const
 {
     const T* filter_ptr = filter + param_.ns;
     const T* in_ptr = in;
@@ -100,7 +100,7 @@ template class RampFilter<double>;
 
 // the gradient of filtering is correlating
 template <typename T>
-bool RampFilterGrad<T>::calculate_on_cpu(const T* in, const T* filter, T* out)
+bool RampFilterGrad<T>::calculate_on_cpu(const T* in, const T* filter, T* out) const
 {
     const T* filter_ptr = filter + param_.ns;
     const T* in_ptr = in;

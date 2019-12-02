@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-30 20:10:31
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-30 21:36:58
+ * @LastEditTime: 2019-12-02 12:24:44
  */
 
 #include "include/filter.h"
@@ -51,7 +51,7 @@ __global__ void RampFilterPrepFanKernel(T* filter, const FilterParam param,
 }
 
 template <>
-bool RampFilterPrep<float>::calculate_on_gpu(float* filter, cudaStream_t stream)
+bool RampFilterPrep<float>::calculate_on_gpu(float* filter, cudaStream_t stream) const
 {
     int n_elements = 2*param_.ns+1;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
@@ -71,7 +71,7 @@ bool RampFilterPrep<float>::calculate_on_gpu(float* filter, cudaStream_t stream)
 }
 
 template <>
-bool RampFilterPrep<double>::calculate_on_gpu(double* filter, cudaStream_t stream)
+bool RampFilterPrep<double>::calculate_on_gpu(double* filter, cudaStream_t stream) const
 {
     int n_elements = 2*param_.ns+1;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
@@ -112,7 +112,7 @@ __global__ void RampFilterKernel(const T* in, const T* filter, T* out,
 
 template <>
 bool RampFilter<float>::calculate_on_gpu(const float* in, const float* filter, 
-    float* out, cudaStream_t stream)
+    float* out, cudaStream_t stream) const
 {
     int n_elements = param_.ns*param_.nrow;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
@@ -125,7 +125,7 @@ bool RampFilter<float>::calculate_on_gpu(const float* in, const float* filter,
 
 template <>
 bool RampFilter<double>::calculate_on_gpu(const double* in, const double* filter, 
-    double* out, cudaStream_t stream)
+    double* out, cudaStream_t stream) const
 {
     int n_elements = param_.ns*param_.nrow;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
@@ -158,7 +158,7 @@ __global__ void RampFilterGradKernel(const T* in, const T* filter, T* out,
 
 template <>
 bool RampFilterGrad<float>::calculate_on_gpu(const float* in, 
-    const float* filter, float* out, cudaStream_t stream)
+    const float* filter, float* out, cudaStream_t stream) const
 {
     int n_elements = param_.ns*param_.nrow;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
@@ -171,7 +171,7 @@ bool RampFilterGrad<float>::calculate_on_gpu(const float* in,
 
 template <>
 bool RampFilterGrad<double>::calculate_on_gpu(const double* in, 
-    const double* filter, double* out, cudaStream_t stream)
+    const double* filter, double* out, cudaStream_t stream) const
 {
     int n_elements = param_.ns*param_.nrow;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);

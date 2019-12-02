@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-01 10:22:45
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-01 23:00:41
+ * @LastEditTime: 2019-12-02 11:03:58
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_RAMP_FILTER_OPS_H_
@@ -64,7 +64,27 @@ struct LaunchRampFilterGradOp {
 }; // struct LaunchRampFilterGradOp
 
 #if GOOGLE_CUDA
+// partial specializations for GPU devices
+template <typename T>
+struct LaunchRampFilterPrepOp<Eigen::GpuDevice, T> {
+    bool operator()(OpKernelContext* ctx, T* filter, 
+        const ct_recon::RampFilterPrep<T> *prep);
+}; // LaunchRampFilterPrepOp
 
+template <typename T>
+struct LaunchRampFilterOp<Eigen::GpuDevice, T> {
+    bool operator()(OpKernelContext* ctx, const T* in, 
+        const T* filter, T* out, const ct_recon::RampFilter<T> *filt, 
+        const int nbatch, const unsigned int sizeproj);
+}; // struct LaunchRampFilterOp
+
+template <typename T>
+struct LaunchRampFilterGradOp<Eigen::GpuDevice, T> {
+    bool operator()(OpKernelContext* ctx, const T* in, const T* filter, 
+    T* out, const ct_recon::RampFilterGrad<T> *grad, const int nbatch, 
+    const unsigned int sizeproj);
+}; // struct LaunchRampFilterGradOp
+#endif
 
 } // namespace tensorflow
 

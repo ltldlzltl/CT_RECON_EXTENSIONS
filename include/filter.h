@@ -3,11 +3,11 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 11:52:58
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-30 20:09:50
+ * @LastEditTime: 2019-12-02 12:30:36
  */
 
-#ifndef _CT_REON_EXT_FILTER_H_
-#define _CT_REON_EXT_FILTER_H_
+#ifndef _CT_RECON_EXT_FILTER_H_
+#define _CT_RECON_EXT_FILTER_H_
 
 #include <string>
 #include <cuda_runtime.h>
@@ -45,8 +45,8 @@ public:
     {}
     ~RampFilterPrep() {}
     // utility functions
-    bool calculate_on_cpu(T* filter);
-    bool calculate_on_gpu(T* filter, cudaStream_t);
+    bool calculate_on_cpu(T* filter) const;
+    bool calculate_on_gpu(T* filter, cudaStream_t) const;
 
 private:
     FilterParam param_;
@@ -62,9 +62,9 @@ public:
     {}
     ~RampFilter() {}
     // utility functions
-    bool calculate_on_cpu(const T* in, const T* filter, T* out);
+    bool calculate_on_cpu(const T* in, const T* filter, T* out) const;
     bool calculate_on_gpu(const T* in, const T* filter, T* out, 
-        cudaStream_t);
+        cudaStream_t) const;
 private:
     FilterParam param_;
 }; // class RampFilter
@@ -79,9 +79,9 @@ public:
     {}
     ~RampFilterGrad() {}
     // utility functions
-    bool calculate_on_cpu(const T* in, const T* filter, T* out);
+    bool calculate_on_cpu(const T* in, const T* filter, T* out) const;
     bool calculate_on_gpu(const T* in, const T* filter, T* out, 
-        cudaStream_t);
+        cudaStream_t) const;
 private:
     FilterParam param_;
 }; // class RampFilterGrad
