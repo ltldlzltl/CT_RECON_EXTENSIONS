@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-21 11:36:02
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-21 14:25:15
+ * @LastEditTime: 2019-12-03 10:47:47
  -->
 
 # 11/21/19
@@ -36,3 +36,45 @@ Solve: modify all "double" to "float" and all "vector\<double>" to "vector\<floa
 see https://github.com/google/sentencepiece/issues/293 . No idea why it happens. 
 
 Solve: set -D_GLIBCXX_USE_CXX11_ABI=1 when compiling
+
+# 12/02/19
+
+## 1. passing '...' as ‘this’ argument discards qualifiers when compiling ramp_filter_ops.cc
+forgot to add 'const' identifier over functions in ramp_filter.h
+
+Solve: add 'const' to those functions
+
+## 2. Eigen::GpuDevice incomplete type when compiling ramp_filter_ops.cu.cc
+It happened again even I used nvcc to compile the file. It seems that the problem is I have to define `EIGEN_USE_GPU` before including "tensorflow/core/util/cuda_kernel_helper.h". This problem does not happen in other .cu.cc files because `EIGEN_USE_GPU` has already been defined in their corresponding .h files.
+
+Solve: move `#define EIGEN_USE_GPU` to the front of `#include "tensorflow/core/util/cuda_kernel_helper.h"`
+
+## 3. the calculation results of `int n_elements = param_.na * MAX(param_.nx, param_.ny);` are wrong
+It happens due to the definition of `MAX(x, y)`. I defined it as `#define MAX(x, y) (x>y) ? x : y` in the original version, which was translated into `int n_elements = param.na*(param.nx>param.ny) ? param.nx : param.ny;` while compiling. 
+
+Solve: be more careful on the macros, use `#define MAX(x, y) ((x) > (y) ? (x) : (y))` instead.
+
+# 12/03/19
+
+## 1. rethinking 11/21/19-1 and 12/02/19-2
+Maybe the functions do not need to be compiled with nvcc, the problem happens simply because `EIGEN_USE_GPU` is not defined before `cuda_kernel_helper.h`. I am going to test that. 
+### TEST1
+INSTRUCTION:
+```bash
+g++ -std=c++11 -shared -o lib/libbp_par_2d.so tensorflow bp_par_2d_ops.cc temp/bp_par_2d.o temp/bp_par_2d.cu.o -I. -I$TF_INC -D GOOGLE_CUDA -L$TF_LIB -ltensorflow_framework -L/usr/local/cuda/lib64 -lcudart -fPIC -D_GLIBCXX_USE_CXX11_ABI=1 -O3
+```
+RESULT: Failed to compile. Cannot find the definition of `blockIdx` in many related .h files. It seems that the file still need to be compiled with nvcc. I am going to see what will happen if I use nvcc to replace g++ here. 
+### TEST2
+INSTRUCTION
+```bash
+nvcc -std=c++11 -shared -o lib/libbp_par_2d.so tensorflow/bp_par_2d_ops.cc temp/bp_par_2d.o temp/bp_par_2d.cu.o -I. -I$TF_INC -I/usr/local -D GOOGLE_CUDA -L$TF_LIB -ltensorflow_framework -L/usr/local/cuda/lib64 -lcudart -x cu -Xcompiler -fPIC -expt-relaxed-constexpr -DNDEBUG -D_GLIBCXX_USE_CXX11_ABI=1 -O3
+```
+Added some useful flags to the instruction like '-expt-relaxed-constexpr' and '-DNDEBUG', which would otherwise lead to problems in compiling. 
+
+RESULT: Some strange errors in linking, e.g. 'temp/bp_par_2d.o(1): error: unrecognized token'. Those errors still occur after I recompile bp_par_2d.o with nvcc. No idea why it happens. Going to see what if I compile .o with nvcc and link those .o files with g++. 
+### TEST3
+```bash
+nvcc -std=c++11 -c -o temp/bp_par_2d_ops.o tensorflow/bp_par_2d_ops.cc -I. -I$TF_INC -I/usr/local -D GOOGLE_CUDA -x cu -Xcompiler -fPIC -expt-relaxed-constexpr -DNDEBUG -D_GLIBCXX_USE_CXX11_ABI=1 -O3
+g++ -shared -std=c++11 -o lib/libbp_par_2d.so temp/bp_par_2d_ops.o temp/bp_par_2d.o temp/bp_par_2d.cu.o -L$TF_LIB -ltensorflow_framework -L /usr/local/cuda/lib64 -lcudart -fPIC -O3
+```
+RESULT: It seems to work. *BE CAREFUL, DO NOT INCLUDE HEADERS INSIDE NAMESPACES.*
