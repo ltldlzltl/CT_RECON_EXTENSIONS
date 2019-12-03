@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-22 20:18:45
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-26 15:52:23
+ * @LastEditTime: 2019-12-02 15:57:16
  */
 
 #include "include/bp_par_2d.h"
@@ -11,6 +11,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <algorithm>
+#include <cstdio>
 
 namespace ct_recon
 {
@@ -42,6 +43,7 @@ bool ParallelBackprojection2DPixDrivenPrep::calculate_on_cpu(double* xcos,
             ysin[ia + iy*param_.na] = posy * sin_angle;
             posy -= param_.dy;
         }
+        angle += param_.orbit;
     }
     return true;
 }
@@ -65,6 +67,7 @@ bool ParallelBackprojection2DPixDriven<T>::calculate_on_cpu(const T* proj,
         for (ix = 0; ix < this->param_.nx; ++ix) {
             sum = 0.0;
             for (ia = 0; ia < this->param_.na; ++ia) {
+                //printf("ix=%d,iy=%d,ia=%d,xcos=%f,ysin=%f\n", ix, iy, ia, *xcos_ptr, ysin_ptr[ia]);
                 s = (*xcos_ptr + ysin_ptr[ia]) / this->param_.ds + cents;
                 if (s >= 0 && s <= this->param_.ns-1) {
                     // linear interpolation

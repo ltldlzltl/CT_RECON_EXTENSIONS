@@ -3,13 +3,14 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-30 20:10:31
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-02 12:24:44
+ * @LastEditTime: 2019-12-03 09:08:50
  */
 
 #include "include/filter.h"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <cstdio>
 #include "cuda/cuda_common.h"
 
 #ifndef M_PI
@@ -100,10 +101,11 @@ __global__ void RampFilterKernel(const T* in, const T* filter, T* out,
         int ipos, ipos2;
         double sum = 0;
         const T* in_ptr = in + irow*param.ns;
-        for (ipos = -param.ns; ipos < param.ns; ++ipos) {
+        for (ipos = -int(param.ns); ipos < int(param.ns); ++ipos) {
             ipos2 = is - ipos;
-            if (ipos2 >= 0 && ipos2 < param.ns)
+            if (ipos2 >= 0 && ipos2 < param.ns) {
                 sum += in_ptr[ipos2] * filter[ipos];
+            }
         }
         out[thread_id] = sum * param.ds;
     }
@@ -146,7 +148,7 @@ __global__ void RampFilterGradKernel(const T* in, const T* filter, T* out,
         int ipos, ipos2;
         double sum = 0;
         const T* in_ptr = in + irow*param.ns;
-        for (ipos = -param.ns; ipos < param.ns; ++ipos) {
+        for (ipos = -int(param.ns); ipos < int(param.ns); ++ipos) {
             ipos2 = is + ipos;
             if (ipos2 >= 0 && ipos2 < param.ns)
                 sum += in_ptr[ipos2] * filter[ipos];

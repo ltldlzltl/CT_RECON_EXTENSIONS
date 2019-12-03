@@ -3,13 +3,14 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-22 19:30:16
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-26 15:39:33
+ * @LastEditTime: 2019-12-02 15:53:55
  */
 
 #ifndef _CT_RECON_EXT_BP_PAR_2D_H_
 #define _CT_RECON_EXT_BP_PAR_2D_H_
 
 #include <cuda_runtime.h>
+#include <cstdio>
 
 namespace ct_recon
 {
@@ -151,9 +152,6 @@ public:
 		int* buffer) const override;
 	bool calculate_on_gpu(double* xcos, double* ysin,
 		int* buffer, cudaStream_t) const override;
-
-protected:
-	ParallelBackprojection2DParam param_;
 }; // class ParallelBackprojection2DPixDrivenPrep
 
 template <typename T>

@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-24 10:36:05
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-26 15:50:08
+ * @LastEditTime: 2019-12-03 09:12:59
  */
 
 #include "include/bp_par_2d.h"
@@ -17,7 +17,7 @@
 #define M_PI_4 M_PI/4
 #endif
 
-#define MAX(x, y) (x>y) ? x : y
+#define MAX(x, y) (((x)>(y)) ? (x) : (y))
 
 namespace ct_recon
 {
@@ -28,8 +28,8 @@ __global__ void ParallelBackprojection2DPixDrivenPrepKernel(double* xcos,
 {
     unsigned int length = MAX(param.nx, param.ny);
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
-        int ia = thread_id % length;
-        int ipos = thread_id / length;
+        int ia = thread_id % param.na;
+        int ipos = thread_id / param.na;
         double angle = param.orbit_start + ia * param.orbit;
         // calculate x*cos(angle)
         if (ipos < param.nx) {
@@ -42,7 +42,7 @@ __global__ void ParallelBackprojection2DPixDrivenPrepKernel(double* xcos,
         if (ipos < param.ny) {
             double centy = static_cast<double>(param.ny-1) / 2 + 
                 param.offset_y;
-            double posy = (param.ny-1-centy-ipos) * param.ny;
+            double posy = (centy-ipos) * param.dy;
             ysin[ia + ipos*param.na] = posy * sin(angle);
         }
     }
@@ -67,8 +67,8 @@ __global__ void ParallelBackprojection2DPixDrivenKernel(const T* proj,
     ParallelBackprojection2DParam param, const int n_elements)
 {
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
-        int ix = n_elements % param.nx;
-        int iy = n_elements / param.nx;
+        int ix = thread_id % param.nx;
+        int iy = thread_id / param.nx;
         double cents = (static_cast<double>(param.ns-1)) / 2 + 
             param.offset_s;
         double s, u;
@@ -160,6 +160,8 @@ __global__ void ParallelBackprojection2DPixDrivenGradPrepKernel(double* begins,
         for (is = 0; is < param.ns; ++is) {
             *begin_ptr = begin;
             begin += offset1;
+            //if (ia == 0)
+            //    printf("is=%d, begin=%f, offset1=%f, offset2=%f\n", is, *begin_ptr, offset1, offset2);
             ++begin_ptr;
         }
     }
@@ -185,8 +187,8 @@ __global__ void ParallelBackprojection2DPixDrivenGradKernel(const T* img,
 {
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
         // variables
-        const int ia = n_elements / param.ns;
-        const int is = n_elements % param.ns;
+        const int ia = thread_id / param.ns;
+        const int is = thread_id % param.ns;
         unsigned int i, j, unit1, unit2, range1, range2;
         double sum = 0.0, u, left, right;
         bool b_usex = usex[ia];
@@ -197,8 +199,13 @@ __global__ void ParallelBackprojection2DPixDrivenGradKernel(const T* img,
         unit2 = b_usex ? param.nx : 1;
         range1 = b_usex ? param.nx : param.ny;
         range2 = b_usex ? param.ny : param.nx;
-        left = (is == 0) ? pos : begins[thread_id + 1];
-        right = (is == param.ns-1) ? pos : begins[thread_id - 1];
+        left = (is == 0) ? pos : begins[thread_id - 1];
+        right = (is == param.ns-1) ? pos : begins[thread_id + 1];
+        if (right < left) {
+            double temp = right;
+            right = left;
+            left = temp;
+        }
         double length = (is == 0) ? begins[thread_id + 1] - pos : 
             pos - begins[thread_id - 1];
         // accumulate gradient

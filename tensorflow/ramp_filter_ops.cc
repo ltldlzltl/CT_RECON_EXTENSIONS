@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-02 09:15:47
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-02 14:40:01
+ * @LastEditTime: 2019-12-03 09:07:28
  */
 
 #include "tensorflow/ramp_filter_ops.h"
@@ -94,6 +94,9 @@ public:
             (new ct_recon::RampFilterPrep<T>(param_));
         filt_ = std::unique_ptr<ct_recon::RampFilter<T>>
             (new ct_recon::RampFilter<T>(param_));
+        // allocate buffer
+        context->allocate_persistent(DT_DOUBLE, 
+            TensorShape({2*param_.ns+1}), &filter_, nullptr);
     }
 
     void Compute(OpKernelContext* context) override {

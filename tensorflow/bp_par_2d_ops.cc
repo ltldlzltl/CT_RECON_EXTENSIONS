@@ -3,13 +3,14 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-27 09:04:26
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-30 11:25:45
+ * @LastEditTime: 2019-12-03 09:08:36
  */
 
 #include "tensorflow/bp_par_2d_ops.h"
 
 #include <vector>
 #include <memory>
+#include <cstdio>
 
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -62,13 +63,13 @@ REGISTER_OP("BackprojectionParallel2D")
         TF_RETURN_IF_ERROR(context->WithRank(context->input(0), 4, &input_shape));
 
         shape_inference::ShapeHandle out_shape = input_shape;
-        ::std::vector<int> proj_shape;
-        TF_RETURN_IF_ERROR(context->GetAttr("proj_shape", &proj_shape));
+        ::std::vector<int> img_shape;
+        TF_RETURN_IF_ERROR(context->GetAttr("img_shape", &img_shape));
         shape_inference::DimensionHandle new_height = context->UnknownDim();
         shape_inference::DimensionHandle new_width = context->UnknownDim();
-        if (proj_shape.size() >= 2) {
-            new_height = context->MakeDim(proj_shape.at(0));
-            new_width = context->MakeDim(proj_shape.at(1));
+        if (img_shape.size() >= 2) {
+            new_height = context->MakeDim(img_shape.at(0));
+            new_width = context->MakeDim(img_shape.at(1));
         }
         TF_RETURN_IF_ERROR(context->ReplaceDim(out_shape, 1, new_height, &out_shape));
         TF_RETURN_IF_ERROR(context->ReplaceDim(out_shape, 2, new_width, &out_shape));
@@ -96,12 +97,12 @@ REGISTER_OP("BackprojectionParallel2DGrad")
         TF_RETURN_IF_ERROR(context->WithRank(context->input(0), 4, &input_shape));
 
         shape_inference::ShapeHandle out_shape = input_shape;
-        ::std::vector<int> img_shape;
-        TF_RETURN_IF_ERROR(context->GetAttr("img_shape", &img_shape));
+        ::std::vector<int> proj_shape;
+        TF_RETURN_IF_ERROR(context->GetAttr("proj_shape", &proj_shape));
         shape_inference::DimensionHandle new_height = context->UnknownDim();
         shape_inference::DimensionHandle new_width = context->UnknownDim();
-        new_height = context->MakeDim(img_shape.at(0));
-        new_width = context->MakeDim(img_shape.at(1));
+        new_height = context->MakeDim(proj_shape.at(0));
+        new_width = context->MakeDim(proj_shape.at(1));
         TF_RETURN_IF_ERROR(context->ReplaceDim(out_shape, 1, new_height, &out_shape));
         TF_RETURN_IF_ERROR(context->ReplaceDim(out_shape, 2, new_width, &out_shape));
         context->set_output(0, out_shape);
@@ -183,7 +184,7 @@ public:
         
         // initialize if needed
         if (!initialized_) {
-            LaunchBpPar2DPrepOp<Device>()(context, 
+            bool ok = LaunchBpPar2DPrepOp<Device>()(context, 
                 buffer1_.AccessTensor(context)->template flat<double>().data(), 
                 buffer2_.AccessTensor(context)->template flat<double>().data(), 
                 buffer3_.AccessTensor(context)->template flat<int>().data(), 
@@ -196,13 +197,12 @@ public:
         Tensor* output = nullptr;
         // allocate result tensor
         OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &output));
-        LaunchBpPar2DOp<Device, T>()(context, input.template flat<T>().data(), 
+        bool ok = LaunchBpPar2DOp<Device, T>()(context, input.template flat<T>().data(), 
             output->template flat<T>().data(), 
             buffer1_.AccessTensor(context)->template flat<double>().data(), 
             buffer2_.AccessTensor(context)->template flat<double>().data(), 
             buffer3_.AccessTensor(context)->template flat<int>().data(), 
             bp_.get(), in_batch, param_.nx*param_.ny, param_.ns*param_.na);
-        
         return;
     }
 
