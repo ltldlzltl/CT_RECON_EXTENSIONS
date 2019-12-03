@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-19 11:37:41
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-01 10:38:11
+ * @LastEditTime: 2019-12-03 10:19:50
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_FP_PAR_2D_OPS_H_
@@ -81,13 +81,23 @@ struct LaunchFpPar2DGradOp {
         return result;
     }
 }; // struct LaunchFpPar2DGradOp
+} // namespace tensorflow
 
 #if GOOGLE_CUDA
+#define EIGEN_USE_GPU
+#include "tensorflow/core/util/cuda_kernel_helper.h"
+namespace tensorflow
+{
 // partial specializations for GPU devices
 template <>
 struct LaunchFpPar2DPrepOp<Eigen::GpuDevice> {
     bool operator()(OpKernelContext* ctx, double* sincostbl, double* buffer1, 
-        int* buffer2, const ct_recon::ParallelProjection2DPrepare* prep);
+        int* buffer2, const ct_recon::ParallelProjection2DPrepare* prep)
+    {
+        auto device = ctx->eigen_gpu_device();
+        return prep->calculate_on_gpu(sincostbl, buffer1, buffer2,
+                                    device.stream());
+    }
 }; // struct LaunchFpPar2DPrepOp<Eigen::GpuDevice, T>
 
 template <typename T>
@@ -95,13 +105,33 @@ struct LaunchFpPar2DOp<Eigen::GpuDevice, T> {
     bool operator()(OpKernelContext* ctx, const T* img, T* proj, 
         const double* sincostbl, const double* buffer1, const int* buffer2, 
         const ct_recon::ParallelProjection2D<T>* fp, const int nbatch, 
-        const unsigned int sizeimg, const unsigned int sizeproj);
+        const unsigned int sizeimg, const unsigned int sizeproj)
+    {
+        auto device = ctx->eigen_gpu_device();
+        bool result = true;
+        const T *img_ptr = img;
+        T *proj_ptr = proj;
+        // iterate in batch
+        for (int ibatch = 0; ibatch < nbatch; ++ibatch)
+        {
+            result &= fp->calculate_on_gpu(img_ptr, proj_ptr, sincostbl,
+                                        buffer1, buffer2, device.stream());
+            img_ptr += sizeimg;
+            proj_ptr += sizeproj;
+        }
+        return result;
+    }
 }; // struct LaunchFpPar2DOp<Eigen::GpuDevice, T>
 
 template <>
 struct LaunchFpPar2DGradPrepOp<Eigen::GpuDevice> {
     bool operator()(OpKernelContext* ctx, double* buffer1, double* buffer2, 
-        int* buffer3, const ct_recon::ParallelProjection2DGradPrepare* prep);
+        int* buffer3, const ct_recon::ParallelProjection2DGradPrepare* prep)
+    {
+        auto device = ctx->eigen_gpu_device();
+        return prep->calculate_on_gpu(buffer1, buffer2, buffer3,
+                                    device.stream());
+    }
 }; // struct LaunchFpPar2DGradPrepOp
 
 // Functor for forward projection gradient calculation
@@ -110,10 +140,24 @@ struct LaunchFpPar2DGradOp<Eigen::GpuDevice, T> {
     bool operator()(OpKernelContext* ctx, const T* proj, T* grad, 
         const double* buffer1, const double* buffer2, const int* buffer3, 
         ct_recon::ParallelProjection2DGrad<T> *fp_grad, const int nbatch, 
-        const unsigned int sizeimg, const unsigned int sizeproj);
+        const unsigned int sizeimg, const unsigned int sizeproj)
+    {
+        auto device = ctx->eigen_gpu_device();
+        bool result = true;
+        T *grad_ptr = grad;
+        const T *proj_ptr = proj;
+        // iterate in batch
+        for (int ibatch = 0; ibatch < nbatch; ++ibatch)
+        {
+            result &= fp_grad->calculate_on_gpu(proj_ptr, grad_ptr, buffer1,
+                                                buffer2, buffer3, device.stream());
+            grad_ptr += sizeimg;
+            proj_ptr += sizeproj;
+        }
+        return result;
+    }
 }; // struct LaunchFpPar2DGradOp
-#endif // GOOGLE_CUDA
-
 } // namespace tensorflow
+#endif // GOOGLE_CUDA
 
 #endif
