@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-24 10:36:05
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 09:12:59
+ * @LastEditTime: 2019-12-02 17:04:14
  */
 
 #include "include/bp_par_2d.h"
@@ -26,7 +26,6 @@ __global__ void ParallelBackprojection2DPixDrivenPrepKernel(double* xcos,
     double* ysin, const ParallelBackprojection2DParam param, 
     const int n_elements)
 {
-    unsigned int length = MAX(param.nx, param.ny);
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
         int ia = thread_id % param.na;
         int ipos = thread_id / param.na;
@@ -189,7 +188,7 @@ __global__ void ParallelBackprojection2DPixDrivenGradKernel(const T* img,
         // variables
         const int ia = thread_id / param.ns;
         const int is = thread_id % param.ns;
-        unsigned int i, j, unit1, unit2, range1, range2;
+        int i, j, unit1, unit2, range1, range2;
         double sum = 0.0, u, left, right;
         bool b_usex = usex[ia];
         double offset = offsets[ia];
@@ -210,6 +209,8 @@ __global__ void ParallelBackprojection2DPixDrivenGradKernel(const T* img,
             pos - begins[thread_id - 1];
         // accumulate gradient
         for (i = 0; i < range2; ++i) {
+            if (is == 0 && ia == 0)
+                printf("iy=%d, sum=%f, pos=%f, left=%f, right=%f\n", i, sum, pos, left, right);
             for (j = ceil(left); j <= right; ++j) {
                 if (j < 0 || j >= range1) continue;
                 u = fabs((j - pos) / length);
