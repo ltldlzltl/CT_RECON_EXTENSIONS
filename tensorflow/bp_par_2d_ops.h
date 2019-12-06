@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-26 15:56:29
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 09:30:59
+ * @LastEditTime: 2019-12-05 13:46:02
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_BP_PAR_2D_OPS_H_
@@ -83,7 +83,13 @@ struct LaunchBpPar2DGradOp {
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
+
+#ifdef TFVER_1_14
+#include "tensorflow/core/util/gpu_kernel_helper.h"
+#else
 #include "tensorflow/core/util/cuda_kernel_helper.h"
+#endif
+
 namespace tensorflow
 {
 // partial specializations for GPU devices

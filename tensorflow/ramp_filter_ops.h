@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-01 10:22:45
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 10:35:23
+ * @LastEditTime: 2019-12-05 13:46:40
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_RAMP_FILTER_OPS_H_
@@ -66,7 +66,11 @@ struct LaunchRampFilterGradOp {
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
+#ifdef TFVER_1_14
+#include "tensorflow/core/util/gpu_kernel_helper.h"
+#else
 #include "tensorflow/core/util/cuda_kernel_helper.h"
+#endif
 namespace tensorflow
 {
 // partial specializations for GPU devices
