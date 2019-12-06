@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-04 14:56:57
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-22 19:32:26
+ * @LastEditTime: 2019-12-06 14:45:19
  */
 
 #ifndef _CT_RECON_EXT_FP_PAR_2D_H_
@@ -254,6 +254,72 @@ public:
     bool calculate_on_gpu(const T* proj, T* img, const double* weights, 
         const double* pos, const int* usex, cudaStream_t stream) const override;
 }; // class ParallelProjection2DRayDrivenGrad
+
+/*****************************************************************************/
+/*        Projection Classes using simplified distance-driven                */
+/*****************************************************************************/
+class ParallelProjection2DDisDrivenPrep: public ParallelProjection2DPrepare
+{
+public:
+    // Ctor and Dtor
+    ParallelProjection2DDisDrivenPrep(const ParallelProjection2DParam& param)
+        : ParallelProjection2DPrepare(param)
+    {}
+    ~ParallelProjection2DDisDrivenPrep() {}
+    // utility functions
+    bool calculate_on_cpu(double* sincostbl, double* beginoffset, 
+        int* usex) const override;
+    bool calculate_on_gpu(double* sincostbl, double* beginoffset, 
+        int* usex, cudaStream_t) const override;
+}; // class ParallelProjection2DDisDrivenPrepare
+
+template <typename T>
+class ParallelProjection2DDisDriven: public ParallelProjection2D<T>
+{
+public:
+// Ctor and Dtor
+    ParallelProjection2DDisDriven(const ParallelProjection2DParam& param)
+        : ParallelProjection2D<T>(param)
+    {}
+    ~ParallelProjection2DDisDriven() {}
+    // utility functions
+    bool calculate_on_cpu(const T* img, T* proj, 
+        const double* sincostbl, const double* beginoffset, 
+        const int* usex) const override;
+    bool calculate_on_gpu(const T* img, T* proj, 
+        const double* sincostbl, const double* beginoffset, 
+        const int* usex, cudaStream_t) const override;
+}; // class ParallelProjection2DDisDriven
+
+class ParallelProjection2DDisDrivenGradPrep: public ParallelProjection2DGradPrepare
+{
+public:
+    // Ctor and Dtor
+    ParallelProjection2DDisDrivenGradPrep(const ParallelProjection2DParam& param)
+        : ParallelProjection2DGradPrepare(param)
+    {}
+    ~ParallelProjection2DDisDrivenGradPrep() {}
+    // utility functions
+    bool calculate_on_cpu(double* weights, double* pos, int* usex) const override;
+    bool calculate_on_gpu(double* weights, double* pos, int* usex, 
+        cudaStream_t stream) const override;
+}; // ParallelProjection2DDisDrivenGradPrep
+
+template <typename T>
+class ParallelProjection2DDisDrivenGrad: public ParallelProjection2DGrad<T>
+{
+public:
+    // Ctor and Dtor
+    ParallelProjection2DDisDrivenGrad(const ParallelProjection2DParam& param)
+        : ParallelProjection2DGrad<T>(param)
+    {}
+    ~ParallelProjection2DDisDrivenGrad() {}
+    // utility functions
+    bool calculate_on_cpu(const T* proj, T* img, const double* weights, 
+        const double* pos, const int* usex) const override;
+    bool calculate_on_gpu(const T* proj, T* img, const double* weights, 
+        const double* pos, const int* usex, cudaStream_t stream) const override;
+}; // class ParallelProjection2DDisDrivenGrad
 
 } // namespace ct_recon
 
