@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-19 12:06:57
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-27 22:07:13
+ * @LastEditTime: 2019-12-06 15:48:44
  */
 
 #include "tensorflow/fp_par_2d_ops.h"
@@ -173,10 +173,23 @@ public:
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na, 2}), &sincostbl_, nullptr);
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na, param_.ns, 2}), &buffer1_, nullptr);
             context->allocate_persistent(DT_INT32, TensorShape({param_.na}), &buffer2_, nullptr);
+        } else if (method == "disdriven") {
+            // check on sizes
+            OP_REQUIRES(context, param_.nx == param_.ny,
+                        errors::InvalidArgument("Image should have same width and height for \
+                        distance-driven projection. "));
+            proj_prep_ = std::unique_ptr<ct_recon::ParallelProjection2DDisDrivenPrep>
+                (new ct_recon::ParallelProjection2DDisDrivenPrep(param_));
+            projector_ = std::unique_ptr<ct_recon::ParallelProjection2DDisDriven<T>>
+                (new ct_recon::ParallelProjection2DDisDriven<T>(param_));
+            // allocate memory for buffers
+            context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na, 2}), &sincostbl_, nullptr);
+            context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na, param_.ns, 3}), &buffer1_, nullptr);
+            context->allocate_persistent(DT_INT32, TensorShape({param_.na}), &buffer2_, nullptr);
         } else {
             context->CtxFailure(__FILE__, __LINE__,
                                 errors::InvalidArgument("Unrecognised projection method. \
-                    Only raycasting and raydriven are available now."));
+                    Only raycasting, raydriven and disdriven are available now."));
         }
     }
 
@@ -289,10 +302,23 @@ public:
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na}), &buffer1_, nullptr);
             context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na, param_.nx, 2}), &buffer2_, nullptr);
             context->allocate_persistent(DT_INT32, TensorShape({param_.na}), &buffer3_, nullptr);
+        } else if (method == "disdriven") {
+            // check on sizes
+            OP_REQUIRES(context, param_.nx == param_.ny,
+                        errors::InvalidArgument("Image should have same width and \
+                    height for raydriven projection. "));
+            grad_prep_ = std::unique_ptr<ct_recon::ParallelProjection2DDisDrivenGradPrep>
+                (new ct_recon::ParallelProjection2DDisDrivenGradPrep(param_));
+            gradient_ = std::unique_ptr<ct_recon::ParallelProjection2DDisDrivenGrad<T>>
+                (new ct_recon::ParallelProjection2DDisDrivenGrad<T>(param_));
+            // allocate memory for buffers
+            context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na}), &buffer1_, nullptr);
+            context->allocate_persistent(DT_DOUBLE, TensorShape({param_.na, param_.nx, 2}), &buffer2_, nullptr);
+            context->allocate_persistent(DT_INT32, TensorShape({param_.na}), &buffer3_, nullptr);
         } else {
             context->CtxFailure(__FILE__, __LINE__, 
                 errors::InvalidArgument("Unrecognised projection method. \
-                    Only raycasting and raydriven are available now."));
+                    Only raycasting, raydriven and disdriven are available now."));
         }
     }
 
