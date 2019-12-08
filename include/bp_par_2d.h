@@ -3,13 +3,15 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-22 19:30:16
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-02 15:53:55
+ * @LastEditTime: 2019-12-08 14:51:25
  */
 
 #ifndef _CT_RECON_EXT_BP_PAR_2D_H_
 #define _CT_RECON_EXT_BP_PAR_2D_H_
 
+#ifdef USE_CUDA
 #include <cuda_runtime.h>
+#endif
 #include <cstdio>
 
 namespace ct_recon
@@ -68,8 +70,10 @@ public:
 	// utility virtual functions
 	virtual bool calculate_on_cpu(double* buffer1, double* buffer2,
 		int* buffer3) const = 0;
+#ifdef USE_CUDA
 	virtual bool calculate_on_gpu(double* buffer1, double* buffer2,
 		int* buffer3, cudaStream_t) const = 0;
+#endif
 
 protected:
 	ParallelBackprojection2DParam param_;
@@ -88,8 +92,10 @@ public:
     // utility functions
     virtual bool calculate_on_cpu(const T* proj, T* img, const double*, 
         const double*, const int*) const = 0;
+#ifdef USE_CUDA
     virtual bool calculate_on_gpu(const T* proj, T* img, const double*, 
         const double*, const int*, cudaStream_t) const = 0;
+#endif
 
 protected:
     ParallelBackprojection2DParam param_;
@@ -107,8 +113,10 @@ public:
 	// utility virtual functions
 	virtual bool calculate_on_cpu(double* buffer1, double* buffer2,
 		bool* buffer3) const = 0;
+#ifdef USE_CUDA
 	virtual bool calculate_on_gpu(double* buffer1, double* buffer2,
 		bool* buffer3, cudaStream_t) const = 0;
+#endif
 
 protected:
 	ParallelBackprojection2DParam param_;
@@ -127,8 +135,10 @@ public:
     // utility functions
     virtual bool calculate_on_cpu(const T* proj, T* img, const double*, 
         const double*, const bool*) const = 0;
+#ifdef USE_CUDA
     virtual bool calculate_on_gpu(const T* proj, T* img, const double*, 
         const double*, const bool*, cudaStream_t) const = 0;
+#endif
 
 protected:
     ParallelBackprojection2DParam param_;
@@ -150,8 +160,10 @@ public:
 	// utility virtual functions
 	bool calculate_on_cpu(double* xcos, double* ysin,
 		int* buffer) const override;
+#ifdef USE_CUDA
 	bool calculate_on_gpu(double* xcos, double* ysin,
 		int* buffer, cudaStream_t) const override;
+#endif
 }; // class ParallelBackprojection2DPixDrivenPrep
 
 template <typename T>
@@ -166,8 +178,10 @@ public:
     // utility functions
     bool calculate_on_cpu(const T* proj, T* img, const double* xcos, 
         const double* ysin, const int*) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* proj, T* img, const double* xcos, 
         const double* ysin, const int*, cudaStream_t) const override;
+#endif
 }; // class ParallelBackprojection2DPixDriven
 
 class ParallelBackprojection2DPixDrivenGradPrep
@@ -182,8 +196,10 @@ public:
 	// utility virtual functions
 	bool calculate_on_cpu(double* begins, double* offsets,
 		bool* usex) const override;
+#ifdef USE_CUDA
 	bool calculate_on_gpu(double* begins, double* offsets,
 		bool* usex, cudaStream_t) const override;
+#endif
 }; // class ParallelBackprojection2DPixDrivenGradPrep
 
 template <typename T>
@@ -199,9 +215,87 @@ public:
     // utility functions
     bool calculate_on_cpu(const T* img, T* grad, const double*, 
         const double*, const bool*) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* img, T* grad, const double*, 
         const double*, const bool*, cudaStream_t) const override;
+#endif
 }; // class ParallelBackprojection2DPixDrivenGrad
+
+/*****************************************************************************/
+/*                     distance-driven backprojection                        */
+/*****************************************************************************/
+class ParallelBackprojection2DDisDrivenPrep: 
+    public ParallelBackprojection2DPrepare
+{
+public:
+	// Ctor and Dtor
+	ParallelBackprojection2DDisDrivenPrep(const ParallelBackprojection2DParam& param)
+		: ParallelBackprojection2DPrepare(param)
+	{}
+	~ParallelBackprojection2DDisDrivenPrep() {}
+	// utility functions
+	bool calculate_on_cpu(double* xcos, double* ysin,
+		int* buffer) const override {};
+#ifdef USE_CUDA
+	bool calculate_on_gpu(double* xcos, double* ysin,
+		int* buffer, cudaStream_t) const override {};
+#endif
+}; // class ParallelBackprojection2DDisDrivenPrep
+
+template <typename T>
+class ParallelBackprojection2DDisDriven: public ParallelBackprojection2D<T>
+{
+public:
+    // Ctor and Dtor
+    ParallelBackprojection2DDisDriven(const ParallelBackprojection2DParam& param)
+        : ParallelBackprojection2D<T>(param)
+    {}
+    ~ParallelBackprojection2DDisDriven() {}
+    // utility functions
+    bool calculate_on_cpu(const T* proj, T* img, const double* xcos, 
+        const double* ysin, const int*) const override {};
+#ifdef USE_CUDA
+    bool calculate_on_gpu(const T* proj, T* img, const double* xcos, 
+        const double* ysin, const int*, cudaStream_t) const override {};
+#endif
+}; // class ParallelBackprojection2DDisDriven
+
+class ParallelBackprojection2DDisDrivenGradPrep
+    : public ParallelBackprojection2DGradPrep
+{
+public:
+	// Ctor and Dtor
+	ParallelBackprojection2DDisDrivenGradPrep(const ParallelBackprojection2DParam& param)
+		: ParallelBackprojection2DGradPrep(param)
+	{}
+	~ParallelBackprojection2DDisDrivenGradPrep() {}
+	// utility functions
+	bool calculate_on_cpu(double* begins, double* offsets,
+		bool* usex) const override {};
+#ifdef USE_CUDA
+	bool calculate_on_gpu(double* begins, double* offsets,
+		bool* usex, cudaStream_t) const override {};
+#endif
+}; // class ParallelBackprojection2DDisDrivenGradPrep
+
+template <typename T>
+class ParallelBackprojection2DDisDrivenGrad
+    : public ParallelBackprojection2DGrad<T>
+{
+public:
+    // Ctor and Dtor
+    ParallelBackprojection2DDisDrivenGrad(const ParallelBackprojection2DParam& param)
+        : ParallelBackprojection2DGrad<T>(param)
+    {}
+    ~ParallelBackprojection2DDisDrivenGrad() {}
+    // utility functions
+    bool calculate_on_cpu(const T* img, T* grad, const double*, 
+        const double*, const bool*) const override {};
+#ifdef USE_CUDA
+    bool calculate_on_gpu(const T* img, T* grad, const double*, 
+        const double*, const bool*, cudaStream_t) const override {};
+#endif
+}; // class ParallelBackprojection2DDisDrivenGrad
 
 } // namespace ct_recon
 

@@ -4,12 +4,13 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-13 14:24:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-11-22 19:29:38
+ * @LastEditTime: 2019-12-08 14:49:57
  */
 
 #ifndef _CT_RECON_EXT_CUDA_COM_H_
 #define _CT_RECON_EXT_CUDA_COM_H_
 
+#ifdef USE_CUDA
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <algorithm>
@@ -86,5 +87,6 @@ __device__ CudaGridRange<T> CudaGridRangeX(T count) {
   return CudaGridRange<T>(blockIdx.x * blockDim.x + threadIdx.x,
                                   gridDim.x * blockDim.x, count);
 }
+#endif
 
 #endif

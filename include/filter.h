@@ -3,14 +3,16 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 11:52:58
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-02 12:30:36
+ * @LastEditTime: 2019-12-08 14:51:55
  */
 
 #ifndef _CT_RECON_EXT_FILTER_H_
 #define _CT_RECON_EXT_FILTER_H_
 
 #include <string>
+#ifdef USE_CUDA
 #include <cuda_runtime.h>
+#endif
 
 namespace ct_recon
 {
@@ -46,7 +48,9 @@ public:
     ~RampFilterPrep() {}
     // utility functions
     bool calculate_on_cpu(T* filter) const;
+#ifdef USE_CUDA
     bool calculate_on_gpu(T* filter, cudaStream_t) const;
+#endif
 
 private:
     FilterParam param_;
@@ -63,8 +67,10 @@ public:
     ~RampFilter() {}
     // utility functions
     bool calculate_on_cpu(const T* in, const T* filter, T* out) const;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* in, const T* filter, T* out, 
         cudaStream_t) const;
+#endif
 private:
     FilterParam param_;
 }; // class RampFilter
@@ -80,8 +86,10 @@ public:
     ~RampFilterGrad() {}
     // utility functions
     bool calculate_on_cpu(const T* in, const T* filter, T* out) const;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* in, const T* filter, T* out, 
         cudaStream_t) const;
+#endif
 private:
     FilterParam param_;
 }; // class RampFilterGrad

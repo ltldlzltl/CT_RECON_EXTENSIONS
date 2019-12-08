@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-13 14:42:30
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-06 15:36:25
+ * @LastEditTime: 2019-12-08 14:49:01
  */
 
 #include "include/fp_par_2d.h"
@@ -25,7 +25,7 @@
 
 namespace ct_recon
 {
-
+#ifdef USE_CUDA
 __global__ void ParallelProjection2DRayCastingPrepareKernel(double* sincostbl, 
     double* begins, int* nsteps, const ParallelProjection2DParam param, 
     const double step_size, const int n_elements)
@@ -720,5 +720,7 @@ bool ParallelProjection2DDisDrivenGrad<double>::calculate_on_gpu(const double* p
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
+
+#endif
 
 } // namespace ct_recon

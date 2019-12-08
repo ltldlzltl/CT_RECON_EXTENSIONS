@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-30 20:10:31
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 09:08:50
+ * @LastEditTime: 2019-12-08 14:49:27
  */
 
 #include "include/filter.h"
@@ -19,7 +19,7 @@
 #endif
 
 namespace ct_recon {
-
+#ifdef USE_CUDA
 template <typename T>
 __global__ void RampFilterPrepParKernel(T* filter, const FilterParam param, 
     const int n_elements)
@@ -183,5 +183,5 @@ bool RampFilterGrad<double>::calculate_on_gpu(const double* in,
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
-
+#endif
 } // namespace ct_recon

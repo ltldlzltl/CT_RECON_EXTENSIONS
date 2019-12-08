@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-24 10:36:05
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-02 17:04:14
+ * @LastEditTime: 2019-12-08 14:50:30
  */
 
 #include "include/bp_par_2d.h"
@@ -21,7 +21,7 @@
 
 namespace ct_recon
 {
-
+#ifdef USE_CUDA
 __global__ void ParallelBackprojection2DPixDrivenPrepKernel(double* xcos, 
     double* ysin, const ParallelBackprojection2DParam param, 
     const int n_elements)
@@ -253,5 +253,5 @@ bool ParallelBackprojection2DPixDrivenGrad<double>::calculate_on_gpu(const doubl
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
-
+#endif
 } // namespace ct_recon

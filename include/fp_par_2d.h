@@ -3,13 +3,15 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-04 14:56:57
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-06 14:45:19
+ * @LastEditTime: 2019-12-08 14:52:12
  */
 
 #ifndef _CT_RECON_EXT_FP_PAR_2D_H_
 #define _CT_RECON_EXT_FP_PAR_2D_H_
 
+#ifdef USE_CUDA
 #include <cuda_runtime.h>
+#endif
 #include <cstdio>
 
 namespace ct_recon
@@ -68,8 +70,10 @@ public:
 	// utility virtual functions
 	virtual bool calculate_on_cpu(double* sincostbl, double* buffer1,
 		int* buffer2) const = 0;
+#ifdef USE_CUDA
 	virtual bool calculate_on_gpu(double* sincostbl, double* buffer1,
 		int* buffer2, cudaStream_t) const = 0;
+#endif
 
 protected:
 	ParallelProjection2DParam param_;
@@ -89,9 +93,11 @@ public:
 	virtual bool calculate_on_cpu(const T* img, T* proj,
 		const double* sincostbl, const double* buffer1,
 		const int* buffer2) const = 0;
+#ifdef USE_CUDA
 	virtual bool calculate_on_gpu(const T* img, T* proj,
 		const double* sincostbl, const double* buffer1,
 		const int* buffer2, cudaStream_t) const = 0;
+#endif
 
 protected:
 	ParallelProjection2DParam param_;
@@ -109,8 +115,10 @@ public:
     // utility functions
     virtual bool calculate_on_cpu(double* buffer1, double* buffer2, 
         int* buffer3) const = 0;
+#ifdef USE_CUDA
     virtual bool calculate_on_gpu(double* buffer1, double* buffer2, 
         int* buffer3, cudaStream_t) const = 0;
+#endif
 
 protected:
     ParallelProjection2DParam param_;
@@ -130,9 +138,11 @@ public:
 	virtual bool calculate_on_cpu(const T* proj, T* img,
 		const double* sincostbl, const double* buffer1,
 		const int* buffer2) const = 0;
+#ifdef USE_CUDA
 	virtual bool calculate_on_gpu(const T* proj, T* img,
 		const double* sincostbl, const double* buffer1,
 		const int* buffer2, cudaStream_t) const = 0;
+#endif
 
 protected:
 	ParallelProjection2DParam param_;
@@ -154,8 +164,10 @@ public:
     // utility functions
     bool calculate_on_cpu(double* sincostbl, double* begins, 
         int* nsteps) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(double* sincostbl, double* begins, 
         int* nsteps, cudaStream_t) const override;
+#endif
 
 private:
     // ray forward step size proportion, 
@@ -180,9 +192,11 @@ public:
     bool calculate_on_cpu(const T* img, T* proj, 
         const double* sincostbl, const double* begins,
 		const int* nsteps) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* img, T* proj, 
         const double* sincostbl, const double* begins,
 		const int* nsteps, cudaStream_t) const override;
+#endif
 
 private:
 	double step_size_; // ray forward step size proportion
@@ -203,8 +217,10 @@ public:
     // utility functions
     bool calculate_on_cpu(double* sincostbl, double* beginoffset, 
         int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(double* sincostbl, double* beginoffset, 
         int* usex, cudaStream_t) const override;
+#endif
 }; // class ParallelProjection2DRayDrivenPrepare
 
 template <typename T>
@@ -220,9 +236,11 @@ public:
     bool calculate_on_cpu(const T* img, T* proj, 
         const double* sincostbl, const double* beginoffset, 
         const int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* img, T* proj, 
         const double* sincostbl, const double* beginoffset, 
         const int* usex, cudaStream_t) const override;
+#endif
 }; // class ParallelProjection2DRayDriven
 
 class ParallelProjection2DRayDrivenGradPrep: public ParallelProjection2DGradPrepare
@@ -235,8 +253,10 @@ public:
     ~ParallelProjection2DRayDrivenGradPrep() {}
     // utility functions
     bool calculate_on_cpu(double* weights, double* pos, int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(double* weights, double* pos, int* usex, 
         cudaStream_t stream) const override;
+#endif
 }; // ParallelProjection2DRayDrivenGradPrep
 
 template <typename T>
@@ -251,8 +271,10 @@ public:
     // utility functions
     bool calculate_on_cpu(const T* proj, T* img, const double* weights, 
         const double* pos, const int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* proj, T* img, const double* weights, 
         const double* pos, const int* usex, cudaStream_t stream) const override;
+#endif
 }; // class ParallelProjection2DRayDrivenGrad
 
 /*****************************************************************************/
@@ -269,8 +291,10 @@ public:
     // utility functions
     bool calculate_on_cpu(double* sincostbl, double* beginoffset, 
         int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(double* sincostbl, double* beginoffset, 
         int* usex, cudaStream_t) const override;
+#endif
 }; // class ParallelProjection2DDisDrivenPrepare
 
 template <typename T>
@@ -286,9 +310,11 @@ public:
     bool calculate_on_cpu(const T* img, T* proj, 
         const double* sincostbl, const double* beginoffset, 
         const int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* img, T* proj, 
         const double* sincostbl, const double* beginoffset, 
         const int* usex, cudaStream_t) const override;
+#endif
 }; // class ParallelProjection2DDisDriven
 
 class ParallelProjection2DDisDrivenGradPrep: public ParallelProjection2DGradPrepare
@@ -301,8 +327,10 @@ public:
     ~ParallelProjection2DDisDrivenGradPrep() {}
     // utility functions
     bool calculate_on_cpu(double* weights, double* pos, int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(double* weights, double* pos, int* usex, 
         cudaStream_t stream) const override;
+#endif
 }; // ParallelProjection2DDisDrivenGradPrep
 
 template <typename T>
@@ -317,8 +345,10 @@ public:
     // utility functions
     bool calculate_on_cpu(const T* proj, T* img, const double* weights, 
         const double* pos, const int* usex) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* proj, T* img, const double* weights, 
         const double* pos, const int* usex, cudaStream_t stream) const override;
+#endif
 }; // class ParallelProjection2DDisDrivenGrad
 
 } // namespace ct_recon

@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-03 11:42:04
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 11:47:18
+ * @LastEditTime: 2019-12-08 14:51:04
  */
 
  #include "include/bp_par_2d_sv.h"
@@ -21,7 +21,7 @@
 
 namespace ct_recon
 {
-
+#ifdef USE_CUDA
 __global__ void ParallelSingleViewBp2DPixDrivenPrepKernel(double* xcos, 
     double* ysin, const ParallelSingleViewBp2DParam param, 
     const int n_elements)
@@ -126,5 +126,5 @@ bool ParallelSingleViewBp2DPixDriven<double>::calculate_on_gpu(const double* pro
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
-
+#endif
 } // namespace ct_recon

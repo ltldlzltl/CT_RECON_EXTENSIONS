@@ -4,13 +4,15 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-03 11:14:24
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 11:33:26
+ * @LastEditTime: 2019-12-08 14:51:42
  */
 
 #ifndef _CT_RECON_EXT_BP_PAR_2D_SV_H_
 #define _CT_RECON_EXT_BP_PAR_2D_SV_H_
 
+#ifdef USE_CUDA
 #include <cuda_runtime.h>
+#endif
 
 namespace ct_recon
 {
@@ -67,8 +69,10 @@ public:
 	// utility virtual functions
 	virtual bool calculate_on_cpu(double* buffer1, double* buffer2,
 		int* buffer3) const = 0;
+#ifdef USE_CUDA
 	virtual bool calculate_on_gpu(double* buffer1, double* buffer2,
 		int* buffer3, cudaStream_t) const = 0;
+#endif
 
 protected:
 	ParallelSingleViewBp2DParam param_;
@@ -87,8 +91,10 @@ public:
     // utility functions
     virtual bool calculate_on_cpu(const T* proj, T* img, const double*, 
         const double*, const int*) const = 0;
+#ifdef USE_CUDA
     virtual bool calculate_on_gpu(const T* proj, T* img, const double*, 
         const double*, const int*, cudaStream_t) const = 0;
+#endif
 
 protected:
     ParallelSingleViewBp2DParam param_;
@@ -109,8 +115,10 @@ public:
 	// utility virtual functions
 	bool calculate_on_cpu(double* xcos, double* ysin,
 		int* buffer) const override;
+#ifdef USE_CUDA
 	bool calculate_on_gpu(double* xcos, double* ysin,
 		int* buffer, cudaStream_t) const override;
+#endif
 }; // class ParallelSingleViewBp2DPixDrivenPrep
 
 template <typename T>
@@ -125,8 +133,10 @@ public:
     // utility functions
     bool calculate_on_cpu(const T* proj, T* img, const double* xcos, 
         const double* ysin, const int*) const override;
+#ifdef USE_CUDA
     bool calculate_on_gpu(const T* proj, T* img, const double* xcos, 
         const double* ysin, const int*, cudaStream_t) const override;
+#endif
 }; // class ParallelSingleViewBp2DPixDriven
 
 } // namespace ct_recon
