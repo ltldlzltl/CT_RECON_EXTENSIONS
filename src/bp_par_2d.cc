@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-22 20:18:45
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-02 15:57:16
+ * @LastEditTime: 2019-12-05 22:16:01
  */
 
 #include "include/bp_par_2d.h"
@@ -56,8 +56,7 @@ bool ParallelBackprojection2DPixDriven<T>::calculate_on_cpu(const T* proj,
     unsigned int ix, iy, is1, is2, ia;
     T* img_ptr = img;
     const double *xcos_ptr, *ysin_ptr = ysin;
-    double posy, posx;
-    double sum, tempsum, u, s;
+    double sum, u, s;
     // useful constants
     const double cents = (static_cast<double>(this->param_.ns-1)) / 2 + 
         this->param_.offset_s;
@@ -149,7 +148,7 @@ bool ParallelBackprojection2DPixDrivenGrad<T>::calculate_on_cpu(const T* img,
 {
     // variables
     unsigned int is, ia, ix, iy;
-    double x, y, u, offset, sum, pos, left, right, length;
+    double x, y, u, offset, sum, left, right, length;
     bool b_usex;
     T* grad_ptr;
     const double *begin_ptr, *offset_ptr;

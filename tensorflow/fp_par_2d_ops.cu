@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-19 12:06:57
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-06 15:48:44
+ * @LastEditTime: 2019-12-09 11:49:34
  */
 
 #include "tensorflow/fp_par_2d_ops.h"
@@ -57,7 +57,6 @@ REGISTER_OP("ForwardProjectionParallel2D")
     .Attr("fov: float")
     .Attr("method: string")
     .SetShapeFn([](shape_inference::InferenceContext* context) {
-        LOG(INFO) << "Forwardprojection parallel 2-D shape function.";
         shape_inference::ShapeHandle input_shape;
         TF_RETURN_IF_ERROR(context->WithRank(context->input(0), 4, &input_shape));
 
@@ -91,7 +90,6 @@ REGISTER_OP("ForwardProjectionParallel2DGrad")
     .Attr("fov: float")
     .Attr("method: string")
     .SetShapeFn([](shape_inference::InferenceContext* context) {
-        LOG(INFO) << "Forwardprojection parallel 2-D shape function.";
         shape_inference::ShapeHandle input_shape;
         TF_RETURN_IF_ERROR(context->WithRank(context->input(0), 4, &input_shape));
 
@@ -114,6 +112,7 @@ public:
     ForwardProjectionParallel2DOp(OpKernelConstruction* context)
         : OpKernel(context), initialized_(false)
     {
+        LOG(INFO) << "Ctor";
         // load and check parameters
         ::std::vector<int> img_shape;
         OP_REQUIRES_OK(context, context->GetAttr("img_shape", &img_shape));

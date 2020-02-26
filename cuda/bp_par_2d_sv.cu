@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-03 11:42:04
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-08 14:51:04
+ * @LastEditTime: 2019-12-08 14:57:04
  */
 
  #include "include/bp_par_2d_sv.h"
@@ -26,7 +26,6 @@ __global__ void ParallelSingleViewBp2DPixDrivenPrepKernel(double* xcos,
     double* ysin, const ParallelSingleViewBp2DParam param, 
     const int n_elements)
 {
-    unsigned int length = MAX(param.nx, param.ny);
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
         int ia = thread_id % param.na;
         int ipos = thread_id / param.na;

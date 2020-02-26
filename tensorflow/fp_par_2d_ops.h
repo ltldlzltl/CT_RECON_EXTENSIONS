@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-19 11:37:41
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-05 13:46:30
+ * @LastEditTime: 2019-12-09 11:49:05
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_FP_PAR_2D_OPS_H_

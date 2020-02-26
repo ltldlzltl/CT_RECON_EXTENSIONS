@@ -16,4 +16,4 @@ set (TARGET3 $<TARGET_OBJECTS:fp_par_2d_cu>)
 set (TARGET4 $<TARGET_OBJECTS:filter_cu>)
 
 # push objects to parent
-set (SRC_TEMP ${TARGET1} ${TARGET2} ${TARGET3} ${TARGET4} PARENT_SCOPE)
+set (CUDA_TEMP ${TARGET1} ${TARGET2} ${TARGET3} ${TARGET4} PARENT_SCOPE)

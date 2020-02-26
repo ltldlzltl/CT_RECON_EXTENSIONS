@@ -70,7 +70,7 @@ if (USE_CUDA)
     add_definitions (-DNDEBUG)
 endif ()
 include_directories (/usr/local ${INC})
-set (CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -w --expt-relaxed-constexpr -O3")
+set (CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -w --expt-relaxed-constexpr")
 
 # compile objects
 add_library (bp_par_2d_ops OBJECT bp_par_2d_ops.cu)

@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-03 11:29:49
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 11:45:46
+ * @LastEditTime: 2019-12-05 22:19:56
  */
 
 #include "include/bp_par_2d_sv.h"
@@ -59,8 +59,7 @@ bool ParallelSingleViewBp2DPixDriven<T>::calculate_on_cpu(const T* proj,
     unsigned int ix, iy, is1, is2, ia;
     T* img_ptr = img;
     const double *xcos_ptr, *ysin_ptr = ysin;
-    double posy, posx;
-    double tempsum, u, s;
+    double u, s;
     // useful constants
     const double cents = (static_cast<double>(this->param_.ns-1)) / 2 + 
         this->param_.offset_s;

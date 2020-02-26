@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 14:43:27
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-02 12:23:57
+ * @LastEditTime: 2019-12-05 22:19:19
  */
 
 #include "include/filter.h"
@@ -77,15 +77,16 @@ bool RampFilter<T>::calculate_on_cpu(const T* in, const T* filter, T* out) const
     const T* in_ptr = in;
     T* out_ptr = out;
     // variables
-    int is, irow, ipos, ipos2;
+    unsigned int is, irow;
+    int ipos, ipos2;
     double sum;
     for (irow = 0; irow < param_.nrow; ++irow) {
         for (is = 0; is < param_.ns; ++is) {
             sum = 0;
-            for (ipos = -param_.ns; ipos <= param_.ns; ++ipos) {
+            for (ipos = -static_cast<int>(param_.ns); ipos <= static_cast<int>(param_.ns); ++ipos) {
                 ipos2 = is - ipos;
-                if (ipos2 >= 0 && ipos2 < param_.ns)
-                    sum += in_ptr[ipos2] * filter[ipos];
+                if (ipos2 >= 0 && ipos2 < static_cast<int>(param_.ns))
+                    sum += in_ptr[ipos2] * filter_ptr[ipos];
             }
             *out_ptr = sum * param_.ds;
             ++out_ptr;
@@ -106,16 +107,17 @@ bool RampFilterGrad<T>::calculate_on_cpu(const T* in, const T* filter, T* out) c
     const T* in_ptr = in;
     T* out_ptr = out;
     // variables
-    int is, irow, ipos, ipos2;
+    unsigned int is, irow;
+    int ipos, ipos2;
     double sum;
     for (irow = 0; irow < param_.nrow; ++irow) {
         for (is = 0; is < param_.ns; ++is) {
             sum = 0;
-            for (ipos = -param_.ns; ipos <= param_.ns; ++ipos) {
+            for (ipos = -static_cast<int>(param_.ns); ipos <= static_cast<int>(param_.ns); ++ipos) {
                 // change '-' into '+', others are the same
                 ipos2 = is + ipos;
-                if (ipos2 >= 0 && ipos2 < param_.ns)
-                    sum += in_ptr[ipos2] * filter[ipos];
+                if (ipos2 >= 0 && ipos2 < static_cast<int>(param_.ns))
+                    sum += in_ptr[ipos2] * filter_ptr[ipos];
             }
             *out_ptr = sum * param_.ds;
             ++out_ptr;
