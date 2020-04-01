@@ -3,15 +3,12 @@
  * @Author: Tianling Lyu
  * @Date: 2020-02-17 11:06:18
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2020-02-17 16:02:04
+ * @LastEditTime: 2020-03-25 10:23:15
  */
 
 #ifndef _CT_RECON_EXT_HELI_INTERP_H_
 #define _CT_RECON_EXT_HELI_INTERP_H_
 
-#ifdef USE_CUDA
-#include <cuda_runtime.h>
-#endif
 #include <cstdio>
 
 namespace ct_recon
@@ -35,6 +32,8 @@ struct HelicalInterpolationParam
     double dz; // spacing between image slices
     double z0; // position of slice 0
     double thickness; // slice thickness
+    double dso; // distance between source and ISO
+    double dsd; // distance between source and detector
 
     // Ctor
     HelicalInterpolationParam() {}
@@ -53,12 +52,14 @@ struct HelicalInterpolationParam
                               unsigned int nz,
                               double dz,
                               double z0,
-                              double thickness)
-        : ns(ns), na(na), ds(ds), dt(dt), offset_s(offset_s),
+                              double thickness, 
+                              double dso, 
+                              double dsd)
+        : ns(ns), nt(nt), na(na), ds(ds), dt(dt), offset_s(offset_s),
           offset_t(offset_t), orbit_start(orbit_start), orbit(orbit), 
           couch_begin(couch_begin), couch_mov(couch_mov), 
           view_per_rot(view_per_rot), nz(nz), dz(dz), z0(z0), 
-          thickness(thickness)
+          thickness(thickness), dso(dso), dsd(dsd)
     {}
 }; // struct HelicalInterpolationParam
 
@@ -78,7 +79,6 @@ public:
     virtual ~HelicalInterpolation() {};
     // utility functions
     virtual bool calculate_on_cpu(const T* proj_in, T* proj_out) const = 0;
-    virtual bool calculate_on_gpu(const T* proj_in, T* proj_out, cudaStream_t) const = 0;
 
 protected:
     HelicalInterpolationParam param_;
@@ -96,7 +96,6 @@ public:
     ~HelicalInterpolation360() {};
     // utility functions
     bool calculate_on_cpu(const T* proj_in, T* proj_out) const override;
-    bool calculate_on_gpu(const T* proj_in, T* proj_out, cudaStream_t) const override;
 
 }; // class HelicalInterpolation360
 
@@ -112,7 +111,6 @@ public:
     ~HelicalInterpolation180() {};
     // utility functions
     bool calculate_on_cpu(const T* proj_in, T* proj_out) const override;
-    bool calculate_on_gpu(const T* proj_in, T* proj_out, cudaStream_t) const override;
 
 }; // class HelicalInterpolation180
 
