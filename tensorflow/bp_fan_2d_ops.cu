@@ -191,7 +191,7 @@ class BackprojectionFan2DOp : public OpKernel {
             
             // initialize if needed
             if (!initialized_) {
-                bool ok = LaunchBpPar2DPrepOp<Device>()(context, 
+                bool ok = LaunchBpFan2DPrepOp<Device>()(context, 
                     buffer1_.AccessTensor(context)->template flat<double>().data(), 
                     buffer2_.AccessTensor(context)->template flat<double>().data(), 
                     buffer3_.AccessTensor(context)->template flat<double>().data(), 
@@ -204,7 +204,7 @@ class BackprojectionFan2DOp : public OpKernel {
             Tensor* output = nullptr;
             // allocate result tensor
             OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &output));
-            bool ok = LaunchBpPar2DOp<Device, T>()(context, input.template flat<T>().data(), 
+            bool ok = LaunchBpFan2DOp<Device, T>()(context, input.template flat<T>().data(), 
                 output->template flat<T>().data(), 
                 buffer1_.AccessTensor(context)->template flat<double>().data(), 
                 buffer2_.AccessTensor(context)->template flat<double>().data(), 
@@ -270,7 +270,7 @@ public:
         param_ = ct_recon::FanBackprojection2DParam(proj_shape[1], proj_shape[0], 
             channel_space, orbit, channel_offset, orbit_start, img_shape[1], 
             img_shape[0], img_space[1], img_space[0], img_offset[1], img_offset[0], 
-            fov);
+            dso, dsd, fov);
         if (method == "pixdriven") {
             grad_prep_ = std::unique_ptr<ct_recon::FanBackprojection2DGradPrep>
                 (new ct_recon::FanBackprojection2DPixDrivenGradPrep(param_));
@@ -303,7 +303,7 @@ public:
         
         // initialize if needed
         if (!initialized_) {
-            LaunchBpPar2DGradPrepOp<Device>()(context, 
+            LaunchBpFan2DGradPrepOp<Device>()(context, 
                 buffer1_.AccessTensor(context)->template flat<double>().data(), 
                 buffer2_.AccessTensor(context)->template flat<double>().data(), 
                 buffer3_.AccessTensor(context)->template flat<double>().data(), 
@@ -316,7 +316,7 @@ public:
         Tensor* output = nullptr;
         // allocate result tensor
         OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &output));
-        LaunchBpPar2DGradOp<Device, T>()(context, input.template flat<T>().data(), 
+        LaunchBpFan2DGradOp<Device, T>()(context, input.template flat<T>().data(), 
             output->template flat<T>().data(), 
             buffer1_.AccessTensor(context)->template flat<double>().data(), 
             buffer2_.AccessTensor(context)->template flat<double>().data(), 
