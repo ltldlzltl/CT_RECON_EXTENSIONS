@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 16:12:03
+ * @LastEditTime: 2021-01-05 16:17:15
  */
 
  #include "include/bp_fan_2d.h"
@@ -226,7 +226,7 @@ bool FanBackprojection2DPixDriven<float>::calculate_on_gpu(const float* proj,
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
     FanBackprojection2DPixDrivenKernel<float>
         <<<config.block_count, config.thread_per_block, 0, stream>>>
-        (proj, img, xpos, ypos, this->param_, n_elements);
+        (proj, img, xpos, ypos, sincostbl, this->param_, n_elements);
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
@@ -240,7 +240,7 @@ bool FanBackprojection2DPixDriven<double>::calculate_on_gpu(const double* proj,
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
     FanBackprojection2DPixDrivenKernel<double>
         <<<config.block_count, config.thread_per_block, 0, stream>>>
-        (proj, img, xpos, ypos, this->param_, n_elements);
+        (proj, img, xpos, ypos, sincostbl, this->param_, n_elements);
 	cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
@@ -277,11 +277,11 @@ bool FanBackprojection2DPixDrivenGrad<float>::calculate_on_gpu(const float* img,
     if (FAN_BP_PIX_DRIVEN_KERNEL == 1) {
         FanBackprojection2DPixDrivenGradKernel1<float>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
-            (img, grad, xpos, ypos, this->param_, n_elements);
+            (img, grad, xpos, ypos, sincostbl, this->param_, n_elements);
     } else if (FAN_BP_PIX_DRIVEN_KERNEL == 2) {
         FanBackprojection2DPixDrivenGradKernel2<float>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
-            (img, grad, xpos, ypos, this->param_, n_elements);
+            (img, grad, xpos, ypos, sincostbl, this->param_, n_elements);
     } else {
         return false;
     }
@@ -299,11 +299,11 @@ bool FanBackprojection2DPixDrivenGrad<double>::calculate_on_gpu(const double* im
     if (FAN_BP_PIX_DRIVEN_KERNEL == 1) {
         FanBackprojection2DPixDrivenGradKernel1<double>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
-            (img, grad, xpos, ypos, this->param_, n_elements);
+            (img, grad, xpos, ypos, sincostbl, this->param_, n_elements);
     } else if (FAN_BP_PIX_DRIVEN_KERNEL == 2) {
         FanBackprojection2DPixDrivenGradKernel2<double>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
-            (img, grad, xpos, ypos, this->param_, n_elements);
+            (img, grad, xpos, ypos, sincostbl, this->param_, n_elements);
     } else {
         return false;
     }
