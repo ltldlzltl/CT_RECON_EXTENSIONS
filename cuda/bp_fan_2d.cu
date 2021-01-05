@@ -3,10 +3,10 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 15:57:21
+ * @LastEditTime: 2021-01-05 15:58:58
  */
 
- #include "include/bp_par_2d.h"
+ #include "include/bp_fan_2d.h"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
