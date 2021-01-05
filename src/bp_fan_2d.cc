@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2020-12-13 20:36:29
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 13:50:06
+ * @LastEditTime: 2021-01-05 16:54:41
  */
 
 #include "include/bp_fan_2d.h"
@@ -85,7 +85,7 @@ bool FanBackprojection2DPixDriven<T>::calculate_on_cpu(const T* proj,
             ++x_ptr;
         }
         // next y
-        ++yptr;
+        ++y_ptr;
     }
     return true;
 }
@@ -164,7 +164,7 @@ bool FanBackprojection2DPixDrivenGrad<T>::calculate_on_cpu(const T* img,
             ++x_ptr;
         }
         // next y
-        ++yptr;
+        ++y_ptr;
     }
     // apply weight
     T weight = static_cast<T>(this->param_.orbit / factor);
