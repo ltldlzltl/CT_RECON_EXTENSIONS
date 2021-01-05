@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 15:58:58
+ * @LastEditTime: 2021-01-05 16:12:03
  */
 
  #include "include/bp_fan_2d.h"
@@ -218,7 +218,7 @@ bool FanBackprojection2DPixDrivenPrep::calculate_on_gpu(double* xpos,
 }
 
 template <>
-bool FanBackprojection2DPixDriven::calculate_on_gpu(const float* proj, 
+bool FanBackprojection2DPixDriven<float>::calculate_on_gpu(const float* proj, 
 	float* img, const double* xpos, const double* ypos, const double* sincostbl, 
     cudaStream_t stream) const
 {
@@ -232,7 +232,7 @@ bool FanBackprojection2DPixDriven::calculate_on_gpu(const float* proj,
 }
 
 template <>
-bool FanBackprojection2DPixDriven::calculate_on_gpu(const double* proj, 
+bool FanBackprojection2DPixDriven<double>::calculate_on_gpu(const double* proj, 
 	double* img, const double* xpos, const double* ypos, const double* sincostbl, 
     cudaStream_t stream) const
 {
@@ -268,7 +268,7 @@ bool FanBackprojection2DPixDrivenGradPrep::calculate_on_gpu(double* xpos,
 }
 
 template <>
-bool FanBackprojection2DPixDrivenGrad::calculate_on_gpu(const float* img, 
+bool FanBackprojection2DPixDrivenGrad<float>::calculate_on_gpu(const float* img, 
 	float* grad, const double* xpos, const double* ypos, const double* sincostbl, 
     cudaStream_t stream) const
 {
@@ -290,7 +290,7 @@ bool FanBackprojection2DPixDrivenGrad::calculate_on_gpu(const float* img,
 }
 
 template <>
-bool FanBackprojection2DPixDrivenGrad::calculate_on_gpu(const double* img, 
+bool FanBackprojection2DPixDrivenGrad<double>::calculate_on_gpu(const double* img, 
 	double* grad, const double* xpos, const double* ypos, const double* sincostbl, 
     cudaStream_t stream) const
 {
