@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 14:19:09
+ * @LastEditTime: 2021-01-05 15:57:21
  */
 
  #include "include/bp_par_2d.h"
@@ -311,4 +311,5 @@ bool FanBackprojection2DPixDrivenGrad::calculate_on_gpu(const double* img,
     return err==cudaSuccess;
 }
 
+#endif // #ifdef USE_CUDA
 } // namespace ct_recon
