@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 16:27:49
+ * @LastEditTime: 2021-01-05 16:43:09
  */
 
  #include "include/bp_fan_2d.h"
@@ -29,7 +29,7 @@ __global__ void ClearElements(T* ptr, const int n_elements)
     for (int i : CudaGridRangeX<int>(n_elements)) {
         ptr[i] = 0;
     }
-    return
+    return;
 }
 
 // bp prepare Kernel1 to calculate xpos
