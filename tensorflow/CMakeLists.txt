@@ -77,12 +77,14 @@ add_library (bp_par_2d_ops OBJECT bp_par_2d_ops.cu)
 add_library (bp_par_2d_sv_ops OBJECT bp_par_2d_sv_ops.cu)
 add_library (fp_par_2d_ops OBJECT fp_par_2d_ops.cu)
 add_library (ramp_filter_ops OBJECT ramp_filter_ops.cu)
+add_library (bp_fan_2d_ops OBJECT bp_fan_2d_ops.cu)
 
 # to make the final line shorter
 set (TARGET1 $<TARGET_OBJECTS:bp_par_2d_ops>)
 set (TARGET2 $<TARGET_OBJECTS:bp_par_2d_sv_ops>)
 set (TARGET3 $<TARGET_OBJECTS:fp_par_2d_ops>)
 set (TARGET4 $<TARGET_OBJECTS:ramp_filter_ops>)
+set (TARGET5 $<TARGET_OBJECTS:bp_fan_2d_ops>)
 
 # push objects to parent
-set (TF_TEMP ${TARGET1} ${TARGET2} ${TARGET3} ${TARGET4} PARENT_SCOPE)
+set (TF_TEMP ${TARGET1} ${TARGET2} ${TARGET3} ${TARGET4} ${TARGET5} PARENT_SCOPE)
