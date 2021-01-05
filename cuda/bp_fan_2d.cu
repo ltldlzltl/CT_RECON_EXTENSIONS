@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 16:17:15
+ * @LastEditTime: 2021-01-05 16:27:49
  */
 
  #include "include/bp_fan_2d.h"
@@ -83,10 +83,10 @@ __global__ void FanBackprojection2DPixDrivenKernel(const T* proj, T* img,
         double s, u, d_loop, r_loop, w;
         int is1, is2;
         double sum = 0;
-        const double x = xpos[ix]
+        const double x = xpos[ix];
         const double y = ypos[iy];
         const T* proj_ptr = proj;
-        double* a_ptr = sincostbl;
+        const double* a_ptr = sincostbl;
         // backprojection
         for (unsigned int ia = 0; ia < param.na; ++ia) {
             d_loop = param.dso + x*a_ptr[0] - y*a_ptr[1];
@@ -123,7 +123,6 @@ __global__ void FanBackprojection2DPixDrivenGradKernel1(const T* img, T* grad,
         int ia = thread_id;
         double s, u, d_loop, r_loop, w, x, y;
         int is1, is2, ix, iy;
-        double sum = 0;
         const double sinangle = sincostbl[2*ia];
         const double cosangle = sincostbl[2*ia+1];
         const T* img_ptr = img;
@@ -168,11 +167,10 @@ __global__ void FanBackprojection2DPixDrivenGradKernel2(const T* img, T* grad,
         T value = img[ix+iy*param.nx];
         double s, u, d_loop, r_loop, w;
         int is1, is2;
-        double sum = 0;
-        const double x = xpos[ix]
+        const double x = xpos[ix];
         const double y = ypos[iy];
-        const T* proj_ptr = grad;
-        double* a_ptr = sincostbl;
+        T* proj_ptr = grad;
+        const double* a_ptr = sincostbl;
         // backprojection
         for (unsigned int ia = 0; ia < param.na; ++ia) {
             d_loop = param.dso + x*a_ptr[0] - y*a_ptr[1];
