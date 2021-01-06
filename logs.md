@@ -126,3 +126,5 @@ while in Tensorflow<=1.14.0, the function is defined as
 So, they use different settings on _GLIBCXX_USE_CXX11_ABI when compiling the shared library. 
 
 In order to be consistant and avoid those undefined symbol problems, I need to define ```-D_GLIBCXX_USE_CXX11_ABI=1``` for early versions of Tensorflow and define ```-D_GLIBCXX_USE_CXX11_ABI=0``` for later versions.
+
+Things have changed when testing on 01/06/21. Tensorflow-gpu=1.14.0 works with ```-D_GLIBCXX_USE_CXX11_ABI=0```. Other versions have not been tested. 

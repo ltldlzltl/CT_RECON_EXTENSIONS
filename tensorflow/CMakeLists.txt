@@ -57,7 +57,7 @@ endif ()
 if ("${VER}" VERSION_GREATER "1.15" OR "${VER}" VERSION_EQUAL "1.15")
     add_definitions (-D_GLIBCXX_USE_CXX11_ABI=0)
 else ()
-    add_definitions (-D_GLIBCXX_USE_CXX11_ABI=1)
+    add_definitions (-D_GLIBCXX_USE_CXX11_ABI=0)
 endif ()
 
 if ("${VER}" VERSION_GREATER "2.0.0a0" OR "${VER}" VERSION_EQUAL "2.0.0a0")
