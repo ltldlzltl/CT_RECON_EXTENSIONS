@@ -12,7 +12,7 @@ set (TARGET2 $<TARGET_OBJECTS:bp_par_2d_sv>)
 set (TARGET3 $<TARGET_OBJECTS:fp_par_2d>)
 set (TARGET4 $<TARGET_OBJECTS:filter>)
 set (TARGET5 $<TARGET_OBJECTS:bp_fan_2d>)
-set (TARGET5 $<TARGET_OBJECTS:helical_interp>)
+set (TARGET6 $<TARGET_OBJECTS:helical_interp>)
 
 # push objects to parent
 set (SRC_TEMP ${TARGET1} ${TARGET2} ${TARGET3} ${TARGET4} ${TARGET5} ${TARGET6} PARENT_SCOPE)
