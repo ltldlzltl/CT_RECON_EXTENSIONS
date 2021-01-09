@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2020-12-13 20:36:29
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 16:54:41
+ * @LastEditTime: 2021-01-09 10:46:48
  */
 
 #include "include/bp_fan_2d.h"
@@ -27,7 +27,7 @@ bool FanBackprojection2DPixDrivenPrep::calculate_on_cpu(double* xpos,
     unsigned int ix, iy, ia;
     double angle = this->param_.orbit_start;
     double sin_angle, cos_angle;
-    double posx = -centx * this->param_.dx, posy;
+    double posx = -centx * this->param_.dx, posy = centy * this->param_.dy;
     for (ia = 0; ia < this->param_.na; ++ia) {
         sincostbl[2*ia] = sin(angle);
         sincostbl[2*ia+1] = cos(angle);
@@ -39,7 +39,7 @@ bool FanBackprojection2DPixDrivenPrep::calculate_on_cpu(double* xpos,
     }
     for (iy = 0; iy < this->param_.ny; ++iy) {
         ypos[iy] = posy;
-        posy += this->param_.dy;
+        posy -= this->param_.dy;
     }
     return true;
 }
@@ -52,11 +52,11 @@ bool FanBackprojection2DPixDriven<T>::calculate_on_cpu(const T* proj,
     unsigned int ix, iy, is1, is2, ia;
     T* img_ptr = img;
     const double *x_ptr, *y_ptr = ypos, *a_ptr;
-    double sum, u, s, d_loop, r_loop, w;
+    double sum, u, s, d_loop, r_loop, w, gamma;
     // useful constants
     const double cents = (static_cast<double>(this->param_.ns-1)) / 2 + 
         this->param_.offset_s;
-    const double factor = round(abs(this->param_.na*this->param_.orbit) / M_PI);
+    const double factor = round(fabs(this->param_.na*this->param_.orbit) / M_PI);
     // start backprojection
     for (iy = 0; iy < this->param_.ny; ++iy) {
         x_ptr = xpos;
@@ -66,8 +66,9 @@ bool FanBackprojection2DPixDriven<T>::calculate_on_cpu(const T* proj,
             for (ia = 0; ia < this->param_.na; ++ia) {
                 d_loop = this->param_.dso + (*x_ptr)*a_ptr[0] - (*y_ptr)*a_ptr[1];
                 r_loop = (*x_ptr)*a_ptr[1] + (*y_ptr)*a_ptr[0];
+                gamma = atan2(r_loop, d_loop);
+                s = gamma * this->param_.dsd / this->param_.ds + cents;
                 w = this->param_.dsd * this->param_.dsd / (d_loop*d_loop + r_loop*r_loop);
-                s = atan2(r_loop, d_loop) * this->param_.dsd / this->param_.ds + cents;
                 if (s >= 0 && s <= this->param_.ns-1) {
                     // linear interpolation
                     is1 = static_cast<unsigned int>(floor(s));
@@ -80,7 +81,7 @@ bool FanBackprojection2DPixDriven<T>::calculate_on_cpu(const T* proj,
                 a_ptr += 2;
             }
             // write result to img
-            *img_ptr = sum * this->param_.orbit / factor;
+            *img_ptr = sum * fabs(this->param_.orbit) / factor;
             ++img_ptr;
             ++x_ptr;
         }
@@ -134,7 +135,7 @@ bool FanBackprojection2DPixDrivenGrad<T>::calculate_on_cpu(const T* img,
     // useful constants
     const double cents = (static_cast<double>(this->param_.ns-1)) / 2 + 
         this->param_.offset_s;
-    const double factor = round(abs(this->param_.na*this->param_.orbit) / M_PI);
+    const double factor = round(fabs(this->param_.na*this->param_.orbit) / M_PI);
     // initialize gradient
     for (int i = 0; i < this->param_.ns*this->param_.na; ++i)
         grad[i] = 0.0;
@@ -153,8 +154,8 @@ bool FanBackprojection2DPixDrivenGrad<T>::calculate_on_cpu(const T* img,
                     is1 = static_cast<unsigned int>(floor(s));
                     is2 = static_cast<unsigned int>(ceil(s));
                     u = s - is1;
-                    grad[is1 + ia*this->param_.ns] += static_cast<T>(w * (1-u)) * (*img_ptr);
-                    grad[is2 + ia*this->param_.ns] += static_cast<T>(w * u) * (*img_ptr);
+                    grad[is1 + ia*this->param_.ns] += (*img_ptr) / static_cast<T>(w * (1-u));
+                    grad[is2 + ia*this->param_.ns] += (*img_ptr) / static_cast<T>(w * u);
                 }
                 // next angle
                 a_ptr += 2;
@@ -167,7 +168,7 @@ bool FanBackprojection2DPixDrivenGrad<T>::calculate_on_cpu(const T* img,
         ++y_ptr;
     }
     // apply weight
-    T weight = static_cast<T>(this->param_.orbit / factor);
+    T weight = static_cast<T>(factor / fabs(this->param_.orbit));
     for (int i = 0; i < this->param_.ns*this->param_.na; ++i)
         grad[i] *= weight;
     return true;

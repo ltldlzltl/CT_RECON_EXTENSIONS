@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-30 20:10:31
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-08 14:49:27
+ * @LastEditTime: 2021-01-09 10:38:14
  */
 
 #include "include/filter.h"
@@ -87,7 +87,7 @@ bool RampFilterPrep<double>::calculate_on_gpu(double* filter, cudaStream_t strea
     } else {
         return false;
     }
-	cudaError_t err = cudaDeviceSynchronize();
+    cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
 
@@ -134,7 +134,7 @@ bool RampFilter<double>::calculate_on_gpu(const double* in, const double* filter
     RampFilterKernel<double>
         <<<config.block_count, config.thread_per_block, 0, stream>>>
         (in, filter+param_.ns, out, param_, n_elements);
-	cudaError_t err = cudaDeviceSynchronize();
+    cudaError_t err = cudaDeviceSynchronize();
     return err==cudaSuccess;
 }
 

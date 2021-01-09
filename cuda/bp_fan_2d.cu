@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 16:43:09
+ * @LastEditTime: 2021-01-09 10:47:23
  */
 
  #include "include/bp_fan_2d.h"
@@ -51,7 +51,7 @@ __global__ void FanBackprojection2DPixDrivenKernelY(double* ypos,
     for (int iy : CudaGridRangeX<int>(ny)) {
         const double centy = (static_cast<double>(param.ny-1)) / 2 + 
             param.offset_y;
-        ypos[iy] = (static_cast<double>(iy) - centy) * param.dx;
+        ypos[iy] = (centy - static_cast<double>(iy)) * param.dy;
     }
     return;
 }
@@ -104,7 +104,7 @@ __global__ void FanBackprojection2DPixDrivenKernel(const T* proj, T* img,
             a_ptr += 2;
         }
         // write to image
-        img[thread_id] = sum * param.orbit / factor;
+        img[thread_id] = sum * fabs(param.orbit) / factor;
     }
     return;
 }
@@ -116,7 +116,7 @@ __global__ void FanBackprojection2DPixDrivenGradKernel1(const T* img, T* grad,
     const double* xpos, const double* ypos, const double* sincostbl, 
     const FanBackprojection2DParam param, const int n_elements)
 {
-    const T factor = param.orbit / round(abs(param.na*param.orbit) / M_PI);
+    const T factor = round(fabs(param.na*param.orbit) / M_PI) / fabs(param.orbit);
     const double cents = (static_cast<double>(param.ns-1)) / 2 + 
         param.offset_s;
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
@@ -141,8 +141,8 @@ __global__ void FanBackprojection2DPixDrivenGradKernel1(const T* img, T* grad,
                     is1 = static_cast<unsigned int>(floor(s));
                     is2 = static_cast<unsigned int>(ceil(s));
                     u = s - is1;
-                    grad_ptr[is1] += static_cast<T>(w * (1-u)) * (*img_ptr) * factor;
-                    grad_ptr[is2] += static_cast<T>(w * u) * (*img_ptr) * factor;
+                    grad_ptr[is1] += (*img_ptr) * factor / static_cast<T>(w * (1-u));
+                    grad_ptr[is2] += (*img_ptr) * factor / static_cast<T>(w * u);
                 }
                 ++img_ptr;
             }
@@ -158,7 +158,7 @@ __global__ void FanBackprojection2DPixDrivenGradKernel2(const T* img, T* grad,
     const double* xpos, const double* ypos, const double* sincostbl, 
     const FanBackprojection2DParam param, const int n_elements)
 {
-    const T factor = param.orbit / round(abs(param.na*param.orbit) / M_PI);
+    const T factor = round(fabs(param.na*param.orbit) / M_PI) / fabs(param.orbit);
     const double cents = (static_cast<double>(param.ns-1)) / 2 + 
         param.offset_s;
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
@@ -182,8 +182,8 @@ __global__ void FanBackprojection2DPixDrivenGradKernel2(const T* img, T* grad,
                 is1 = floor(s);
                 is2 = ceil(s);
                 u = s - is1;
-                atomicAdd(proj_ptr+is1, static_cast<T>(w * (1-u)) * value * factor);
-                atomicAdd(proj_ptr+is2, static_cast<T>(w * u) * value * factor);
+                atomicAdd(proj_ptr+is1, value * factor / static_cast<T>(w * (1-u)));
+                atomicAdd(proj_ptr+is2, value * factor / static_cast<T>(w * u));
             }
             proj_ptr += param.ns;
             a_ptr += 2;
