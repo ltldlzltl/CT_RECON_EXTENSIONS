@@ -21,6 +21,12 @@ set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 # user settings
 option (USE_CUDA "Do you want to build GPU code?" ON)
 option (USE_TF "Do you want to build Tensorflow extension library?" OFF)
+option (DEBUG "Debug or release?" ON)
+if (DEBUG)
+    set (CMAKE_BUILD_TYPE Debug)
+else ()
+    set (CMAKE_BUILD_TYPE Release)
+endif()
 # include path
 include_directories (${PROJECT_SOURCE_DIR})
 # sub-directories
