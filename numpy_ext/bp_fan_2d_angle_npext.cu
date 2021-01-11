@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 20:13:54
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 22:31:51
+ * @LastEditTime: 2021-01-10 23:08:04
  */
 
 #include "numpy_ext/bp_fan_2d_angle_npext.h"
@@ -14,17 +14,18 @@
 
 namespace np_ext {
 
-#define Container OpContainer<FanBpAngleNPExt, FanBp2DAngleAllocParam, FanBp2DAngleRunParam>
+#define FanBpAngleContainer OpContainer<FanBpAngleNPExt, FanBp2DAngleAllocParam, FanBp2DAngleRunParam>
 
-Container container_;
+FanBpAngleContainer fan_fp_angle_container_;
 
 FanBpAngleNPExt::FanBpAngleNPExt(const FanBp2DAngleAllocParam& param, 
     int device)
     : param_(param.param), device_(device), allocated_(false), bp_prep_(param.param), 
-    bp_(param.param), xpos_(nullptr), ypos_(nullptr), sincostbl_(nullptr), angles_(param.angles), 
-    in_(nullptr), out_(nullptr)
+    bp_(param.param), xpos_(nullptr), ypos_(nullptr), sincostbl_(nullptr), angles_(param.angles)
 {
 #ifdef USE_CUDA
+    in_ = nullptr;
+    out_ = nullptr;
     stream_ = nullptr;
 #endif
 }
@@ -93,7 +94,6 @@ bool FanBpAngleNPExt::allocate() {
         err = cudaMalloc(&out_, param_.nx*param_.ny*sizeof(double));
         if (err != cudaSuccess)
             throw std::runtime_error("CUDA allocate output array failed!");
-        allocated_ == true;
         double* angles_gpu;
         err = cudaMalloc(&angles_gpu, param_.na*sizeof(double));
         if (err != cudaSuccess)
@@ -103,6 +103,7 @@ bool FanBpAngleNPExt::allocate() {
             cudaFree(angles_gpu);
             throw std::runtime_error("CUDA memcpy angles array failed!");
         }
+        allocated_ = true;
         return bp_prep_.calculate_on_gpu(angles_gpu, xpos_, ypos_, sincostbl_, stream_);
 #else
         return false;
@@ -130,24 +131,33 @@ bool FanBpAngleNPExt::run(const FanBp2DAngleRunParam& param)
 
 } // namespace np_ext
 
-int FanBp2DAngleCreate(double* angles, unsigned int ns, unsigned int na, 
+#if defined(_WIN32)
+#define DLL_EXPORT _declspec(dllexport)
+#else
+#define DLL_EXPORT
+#endif
+
+DLL_EXPORT extern "C"
+int fan_bp_2d_angle_create(double* angles, unsigned int ns, unsigned int na, 
     double ds, double offset_s, unsigned int nx, unsigned int ny, double dx, 
     double dy, double offset_x, double offset_y, double dso, double dsd, 
     double fov, int device)
 {
     np_ext::FanBp2DAngleAllocParam param(ns, na, ds, offset_s, nx, ny, dx, dy, 
         offset_x, offset_y, dso, dsd, fov, angles);
-    int handle = np_ext::container_.create(param, device);
+    int handle = np_ext::fan_fp_angle_container_.create(param, device);
     return handle;
 }
 
-bool FanBp2DAngleRun(int handle, double* in, double* out)
+DLL_EXPORT extern "C"
+bool fan_bp_2d_angle_run(int handle, double* in, double* out)
 {
     np_ext::FanBp2DAngleRunParam param(in, out);
-    return np_ext::container_.run(handle, param);
+    return np_ext::fan_fp_angle_container_.run(handle, param);
 }
 
-bool FanBp2DAngleDestroy(int handle)
+DLL_EXPORT extern "C"
+bool fan_bp_2d_angle_destroy(int handle)
 {
-    return np_ext::container_.erase(handle);
+    return np_ext::fan_fp_angle_container_.erase(handle);
 }

@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 18:40:00
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 21:50:40
+ * @LastEditTime: 2021-01-10 18:58:03
  */
 
 #ifndef _NP_EXT_BP_FAN_2D_ANGLE_H_
@@ -66,8 +66,10 @@ private:
     double* ypos_;
     double* sincostbl_;
     double* angles_;
+#ifdef USE_CUDA
     double* in_;
     double* out_;
+#endif
 
     ct_recon::FanBackprojection2DAngleParam param_;
     int device_;

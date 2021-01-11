@@ -2,8 +2,8 @@
  * @Description: abstract container for operator runners
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 18:06:32
- * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 22:29:02
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-11 17:47:45
  */
 
 #ifndef _NP_EXT_COMMON_H_
@@ -11,6 +11,9 @@
 
 #include <map>
 #include <memory>
+#ifdef USE_CUDA
+#include "cuda_runtime.h"
+#endif
 
 namespace np_ext {
 
@@ -47,6 +50,11 @@ private:
     std::map<int, std::shared_ptr<FunctorType>> functors_;
     int count_;
 };
+
+extern int device_;
+#ifdef USE_CUDA
+extern cudaStream_t stream_;
+#endif
 
 } // namespace np_ext
 
