@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-10 22:35:16
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-01-11 18:01:09
+ * @LastEditTime: 2021-01-11 18:13:15
  */
 
 #include "numpy_ext/fan_weighting_npext.h"
@@ -19,12 +19,11 @@ namespace np_ext {
 #define FanWContainer OpContainer<FanWeightingNPExt, ct_recon::FanWeightingParam, FanWeightingRunParam>
 FanWContainer fan_w_container_;
 
-FanWeightingNPExt::FanWeightingNPExt(const ct_recon::FanWeightingParam& param, int device)
-    : param_(param), device_(device), allocated_(false), fw_(param)
+FanWeightingNPExt::FanWeightingNPExt(const ct_recon::FanWeightingParam& param)
+    : param_(param), allocated_(false), fw_(param)
 {
 #ifdef USE_CUDA
     inout_ = nullptr;
-    stream_ = nullptr;
 #endif
 }
 
@@ -34,8 +33,6 @@ FanWeightingNPExt::~FanWeightingNPExt()
 #ifdef USE_CUDA
         if (inout_ != nullptr)
             cudaFree(inout_);
-        if (stream_ != nullptr)
-            cudaStreamDestroy(stream_);
 #endif
     }
 }
@@ -48,12 +45,6 @@ bool FanWeightingNPExt::allocate() {
     } else {
 #ifdef USE_CUDA
         cudaError_t err;
-        err = cudaSetDevice(device_);
-        if (err != cudaSuccess) 
-            throw std::runtime_error("Device not found!");
-        err = cudaStreamCreate(&stream_);
-        if (err != cudaSuccess) 
-            throw std::runtime_error("Stream initialization failed!");
         err = cudaMalloc(&inout_, param_.ns*param_.nrow*sizeof(double));
         if (err != cudaSuccess)
             throw std::runtime_error("CUDA allocate inout array failed!");
@@ -94,7 +85,7 @@ bool FanWeightingNPExt::run(const FanWeightingRunParam& param)
 
 DLL_EXPORT extern "C"
 int fan_weighting_create(unsigned int ns, unsigned int nrow, double ds, 
-    double dso, double dsd, int type, int device)
+    double dso, double dsd, int type)
 {
     std::string s_type;
     switch (type) {
@@ -105,7 +96,7 @@ int fan_weighting_create(unsigned int ns, unsigned int nrow, double ds,
         }
     }
     ct_recon::FanWeightingParam param(ns, nrow, ds, dso, dsd, s_type);
-    int handle = np_ext::fan_w_container_.create(param, device);
+    int handle = np_ext::fan_w_container_.create(param);
     return handle;
 }
 

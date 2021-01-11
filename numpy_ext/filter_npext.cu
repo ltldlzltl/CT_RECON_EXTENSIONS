@@ -2,8 +2,8 @@
  * @Description: implement ramp filter numpy extension library functions
  * @Author: Tianling Lyu
  * @Date: 2021-01-10 19:03:19
- * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-10 23:07:49
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-11 18:13:44
  */
 
 #include "numpy_ext/filter_npext.h"
@@ -17,14 +17,13 @@ namespace np_ext {
 #define RampFilterContainer OpContainer<RampFilterNPExt, ct_recon::FilterParam, RampFilterRunParam>
 RampFilterContainer ramp_filter_container_;
 
-RampFilterNPExt::RampFilterNPExt(const ct_recon::FilterParam& param, int device)
-    : param_(param), device_(device), allocated_(false), flt_prep_(param), 
+RampFilterNPExt::RampFilterNPExt(const ct_recon::FilterParam& param)
+    : param_(param), allocated_(false), flt_prep_(param), 
     flt_(param), filter_(nullptr)
 {
 #ifdef USE_CUDA
     in_ = nullptr;
     out_ = nullptr;
-    stream_ = nullptr;
 #endif
 }
 
@@ -42,8 +41,6 @@ RampFilterNPExt::~RampFilterNPExt()
             cudaFree(in_);
         if (out_ != nullptr)
             cudaFree(out_);
-        if (stream_ != nullptr)
-            cudaStreamDestroy(stream_);
 #endif
     }
 }
@@ -58,12 +55,6 @@ bool RampFilterNPExt::allocate() {
     } else {
 #ifdef USE_CUDA
         cudaError_t err;
-        err = cudaSetDevice(device_);
-        if (err != cudaSuccess) 
-            throw std::runtime_error("Device not found!");
-        err = cudaStreamCreate(&stream_);
-        if (err != cudaSuccess) 
-            throw std::runtime_error("Stream initialization failed!");
         err = cudaMalloc(&filter_, (2*param_.ns+1)*sizeof(double));
         if (err != cudaSuccess)
             throw std::runtime_error("CUDA allocate filter failed!");
@@ -112,7 +103,7 @@ bool RampFilterNPExt::run(const RampFilterRunParam& param)
 
 DLL_EXPORT extern "C"
 int ramp_filter_create(unsigned int ns, unsigned int nrow, double ds, 
-    double dsd, int type, int device)
+    double dsd, int type)
 {
     std::string s_type;
     switch (type) {
@@ -124,7 +115,7 @@ int ramp_filter_create(unsigned int ns, unsigned int nrow, double ds,
         }
     }
     ct_recon::FilterParam param(ns, nrow, ds, dsd, s_type);
-    int handle = np_ext::ramp_filter_container_.create(param, device);
+    int handle = np_ext::ramp_filter_container_.create(param);
     return handle;
 }
 

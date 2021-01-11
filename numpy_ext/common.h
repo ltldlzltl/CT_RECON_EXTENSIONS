@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 18:06:32
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-01-11 17:47:45
+ * @LastEditTime: 2021-01-11 18:09:47
  */
 
 #ifndef _NP_EXT_COMMON_H_
@@ -28,8 +28,8 @@ public:
         functors_.clear();
     }
 
-    int create(ParamType1 param, int device) {
-        auto pair = std::make_pair(++count_, std::make_shared<FunctorType>(param, device));
+    int create(ParamType1 param) {
+        auto pair = std::make_pair(++count_, std::make_shared<FunctorType>(param));
         functors_.insert(pair);
         return count_;
     }

@@ -19,11 +19,19 @@ _bool = npct.ctypes.c_bool
 
 # load c++ library
 _lib = npct.load_library("libnumpy_ctext.so", "build/lib")
+# set device
+_set_device = _lib.set_device
+_set_device.rettype = _bool
+_set_device.argtypes = [_int]
+# clear device
+_clear_device = _lib.clear
+_clear_device.rettype = _bool
+_clear_device.argtypes = []
 # fan weighting
 _fan_weighting_create = _lib.fan_weighting_create
 _fan_weighting_create.rettype = _int
 _fan_weighting_create.argtypes = [_uint, _uint, _double, _double, _double, 
-    _int, _int]
+    _int]
 _fan_weighting_run = _lib.fan_weighting_run
 _fan_weighting_run.rettype = _bool
 _fan_weighting_run.argtypes = [_int, _array2dd, _array2dd]
@@ -33,7 +41,7 @@ _fan_weighting_destroy.argtypes = [_int]
 # ramp filter
 _ramp_filter_create = _lib.ramp_filter_create
 _ramp_filter_create.rettype = _int
-_ramp_filter_create.argtypes = [_uint, _uint, _double, _double, _int, _int]
+_ramp_filter_create.argtypes = [_uint, _uint, _double, _double, _int]
 _ramp_filter_run = _lib.ramp_filter_run
 _ramp_filter_run.rettype = _bool
 _ramp_filter_run.argtypes = [_int, _array2dd, _array2dd]
@@ -45,7 +53,7 @@ _fan_bp_2d_angle_create = _lib.fan_bp_2d_angle_create
 _fan_bp_2d_angle_create.rettype = _int
 _fan_bp_2d_angle_create.argtypes = [_array1dd, _uint, _uint, _double, _double, 
     _uint, _uint, _double, _double, _double, _double, _double, _double, 
-    _double, _int]
+    _double]
 _fan_bp_2d_angle_run = _lib.fan_bp_2d_angle_run
 _fan_bp_2d_angle_run.rettype = _bool
 _fan_bp_2d_angle_run.argtypes = [_int, _array2dd, _array2dd]
@@ -59,15 +67,15 @@ class FanFBP2DAngle:
     def __init__(self, param:dict):
         self._param = param
         itype = 1
+        _set_device(param["device"])
         self._fw_handle = _fan_weighting_create(param["ns"], param["na"], 
-            param["ds"], param["dso"], param["dsd"], itype, param["device"])
+            param["ds"], param["dso"], param["dsd"], itype)
         self._flt_handle = _ramp_filter_create(param["ns"], param["na"], 
-            param["ds"], param["dsd"], itype, param["device"])
+            param["ds"], param["dsd"], itype)
         self._bp_handle = _fan_bp_2d_angle_create(param["angles"], param["ns"], 
             param["na"], param["ds"], param["offset_s"], param["nx"], 
             param["ny"], param["dx"], param["dy"], param["offset_x"], 
-            param["offset_y"], param["dso"], param["dsd"], param["fov"], 
-            param["device"])
+            param["offset_y"], param["dso"], param["dsd"], param["fov"])
     
     def __del__(self):
         _fan_weighting_destroy(self._fw_handle)

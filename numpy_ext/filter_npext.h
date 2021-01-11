@@ -2,8 +2,8 @@
  * @Description: classes and structs for ramp filter numpy extension
  * @Author: Tianling Lyu
  * @Date: 2021-01-10 18:51:45
- * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-10 19:06:06
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-11 18:10:09
  */
 
 #ifndef _NP_EXT_FILTER_H_
@@ -28,7 +28,7 @@ namespace np_ext {
     class RampFilterNPExt
     {
     public:
-        RampFilterNPExt(const ct_recon::FilterParam& param, int device);
+        RampFilterNPExt(const ct_recon::FilterParam& param);
         ~RampFilterNPExt();
 
         bool allocate();
@@ -42,14 +42,10 @@ namespace np_ext {
 #endif
 
         ct_recon::FilterParam param_;
-        int device_;
         bool allocated_;
 
         ct_recon::RampFilterPrep<double> flt_prep_;
         ct_recon::RampFilter<double> flt_;
-#ifdef USE_CUDA
-        cudaStream_t stream_;
-#endif
     }; // class RampFilterNPExt
 
 } // namespace np_ext

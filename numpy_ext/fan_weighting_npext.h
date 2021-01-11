@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-10 19:42:42
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-01-11 18:01:41
+ * @LastEditTime: 2021-01-11 18:10:19
  */
 
 #ifndef _NP_EXT_FAN_WEIGHTING_H_
@@ -29,7 +29,7 @@ struct FanWeightingRunParam
 class FanWeightingNPExt
 {
 public:
-    FanWeightingNPExt(const ct_recon::FanWeightingParam& param, int device);
+    FanWeightingNPExt(const ct_recon::FanWeightingParam& param);
     ~FanWeightingNPExt();
 
     bool allocate();
@@ -41,13 +41,9 @@ private:
 #endif
 
     ct_recon::FanWeightingParam param_;
-    int device_;
     bool allocated_;
 
     ct_recon::FanWeighting<double> fw_;
-#ifdef USE_CUDA
-    cudaStream_t stream_;
-#endif
 };
 
 

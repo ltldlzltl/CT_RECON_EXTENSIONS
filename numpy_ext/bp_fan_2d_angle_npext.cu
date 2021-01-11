@@ -2,8 +2,8 @@
  * @Description: implement numpy extension library functions
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 20:13:54
- * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-10 23:08:04
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-11 18:14:51
  */
 
 #include "numpy_ext/bp_fan_2d_angle_npext.h"
@@ -18,15 +18,13 @@ namespace np_ext {
 
 FanBpAngleContainer fan_fp_angle_container_;
 
-FanBpAngleNPExt::FanBpAngleNPExt(const FanBp2DAngleAllocParam& param, 
-    int device)
-    : param_(param.param), device_(device), allocated_(false), bp_prep_(param.param), 
+FanBpAngleNPExt::FanBpAngleNPExt(const FanBp2DAngleAllocParam& param)
+    : param_(param.param), allocated_(false), bp_prep_(param.param), 
     bp_(param.param), xpos_(nullptr), ypos_(nullptr), sincostbl_(nullptr), angles_(param.angles)
 {
 #ifdef USE_CUDA
     in_ = nullptr;
     out_ = nullptr;
-    stream_ = nullptr;
 #endif
 }
 
@@ -56,8 +54,6 @@ FanBpAngleNPExt::~FanBpAngleNPExt()
             cudaFree(in_);
         if (out_ != nullptr)
             cudaFree(out_);
-        if (stream_ != nullptr)
-            cudaStreamDestroy(stream_);
 #endif
     }
 }
@@ -141,11 +137,11 @@ DLL_EXPORT extern "C"
 int fan_bp_2d_angle_create(double* angles, unsigned int ns, unsigned int na, 
     double ds, double offset_s, unsigned int nx, unsigned int ny, double dx, 
     double dy, double offset_x, double offset_y, double dso, double dsd, 
-    double fov, int device)
+    double fov)
 {
     np_ext::FanBp2DAngleAllocParam param(ns, na, ds, offset_s, nx, ny, dx, dy, 
         offset_x, offset_y, dso, dsd, fov, angles);
-    int handle = np_ext::fan_fp_angle_container_.create(param, device);
+    int handle = np_ext::fan_fp_angle_container_.create(param);
     return handle;
 }
 

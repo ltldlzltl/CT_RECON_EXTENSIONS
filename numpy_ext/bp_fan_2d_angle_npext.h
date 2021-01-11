@@ -2,8 +2,8 @@
  * @Description: classes and structs for bp_fan_2d_angle numpy extension
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 18:40:00
- * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-10 18:58:03
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-11 18:10:43
  */
 
 #ifndef _NP_EXT_BP_FAN_2D_ANGLE_H_
@@ -54,8 +54,7 @@ struct FanBp2DAngleRunParam
 class FanBpAngleNPExt
 {
 public:
-    FanBpAngleNPExt(const FanBp2DAngleAllocParam& param, 
-        int device);
+    FanBpAngleNPExt(const FanBp2DAngleAllocParam& param);
     ~FanBpAngleNPExt();
 
     bool allocate();
@@ -72,14 +71,10 @@ private:
 #endif
 
     ct_recon::FanBackprojection2DAngleParam param_;
-    int device_;
     bool allocated_;
 
     ct_recon::FanBackprojection2DAnglePixDrivenPrep bp_prep_;
     ct_recon::FanBackprojection2DAnglePixDriven<double> bp_;
-#ifdef USE_CUDA
-    cudaStream_t stream_;
-#endif
 };
 
 } // namespace np_ext
