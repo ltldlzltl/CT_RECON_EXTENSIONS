@@ -20,7 +20,7 @@ set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 # user settings
 option (USE_CUDA "Do you want to build GPU code?" ON)
-option (USE_TF "Do you want to build Tensorflow extension library?" OFF)
+option (USE_TF "Do you want to build Tensorflow extension library?" ON)
 option (USE_NP "Do you want to build numpy extension library?" ON)
 option (DEBUG "Debug or release?" ON)
 if (DEBUG)
@@ -31,13 +31,18 @@ endif()
 # include path
 include_directories (${PROJECT_SOURCE_DIR})
 # sub-directories
+if (USE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    include_directories(${CUDAToolkit_INCLUDE_DIRS})
+    add_definitions("-DUSE_CUDA")
+    add_subdirectory("cuda")
+endif ()
 add_subdirectory("src")
 set (TEMP ${SRC_TEMP})
 if (USE_CUDA)
-    add_definitions(-DUSE_CUDA)
-    add_subdirectory("cuda")
-    set (TEMP ${TEMP} ${CUDA_TEMP})
+    set(TEMP ${TEMP} ${CUDA_TEMP})
 endif ()
+
 # build shared library
 add_library(ctext SHARED ${TEMP})
 # Tensorflow extension
