@@ -57,7 +57,7 @@ endif ()
 if ("${VER}" VERSION_GREATER "1.15" OR "${VER}" VERSION_EQUAL "1.15")
     add_definitions (-D_GLIBCXX_USE_CXX11_ABI=0)
 else ()
-    add_definitions (-D_GLIBCXX_USE_CXX11_ABI=0)
+    add_definitions (-D_GLIBCXX_USE_CXX11_ABI=1)
 endif ()
 
 if ("${VER}" VERSION_GREATER "2.0.0a0" OR "${VER}" VERSION_EQUAL "2.0.0a0")
@@ -78,6 +78,7 @@ add_library (bp_par_2d_sv_ops OBJECT bp_par_2d_sv_ops.cu)
 add_library (fp_par_2d_ops OBJECT fp_par_2d_ops.cu)
 add_library (ramp_filter_ops OBJECT ramp_filter_ops.cu)
 add_library (bp_fan_2d_ops OBJECT bp_fan_2d_ops.cu)
+add_library (fan_weighting_ops OBJECT fan_weighting_ops.cu)
 
 # to make the final line shorter
 set (TARGET1 $<TARGET_OBJECTS:bp_par_2d_ops>)
@@ -85,6 +86,8 @@ set (TARGET2 $<TARGET_OBJECTS:bp_par_2d_sv_ops>)
 set (TARGET3 $<TARGET_OBJECTS:fp_par_2d_ops>)
 set (TARGET4 $<TARGET_OBJECTS:ramp_filter_ops>)
 set (TARGET5 $<TARGET_OBJECTS:bp_fan_2d_ops>)
+set (TARGET6 $<TARGET_OBJECTS:fan_weighting_ops>)
 
 # push objects to parent
-set (TF_TEMP ${TARGET1} ${TARGET2} ${TARGET3} ${TARGET4} ${TARGET5} PARENT_SCOPE)
+set (TF_TEMP ${TARGET1} ${TARGET2} ${TARGET3} ${TARGET4} ${TARGET5} 
+    ${TARGET6} PARENT_SCOPE)

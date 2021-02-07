@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 19:02:36
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 20:14:27
+ * @LastEditTime: 2021-02-04 21:01:20
  */
 
  #include "tensorflow/bp_fan_2d_ops.h"
@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <cstdio>
+#include <exception>
 
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -60,7 +61,6 @@ REGISTER_OP("BackprojectionFan2D")
     .Attr("fov: float")
     .Attr("method: string")
     .SetShapeFn([](shape_inference::InferenceContext* context) {
-        LOG(INFO) << "Backprojection fan 2-D shape function.";
         shape_inference::ShapeHandle input_shape;
         TF_RETURN_IF_ERROR(context->WithRank(context->input(0), 4, &input_shape));
 
@@ -96,7 +96,6 @@ REGISTER_OP("BackprojectionFan2DGrad")
     .Attr("fov: float")
     .Attr("method: string")
     .SetShapeFn([](shape_inference::InferenceContext* context) {
-        LOG(INFO) << "Backprojection fan 2-D gradient shape function.";
         shape_inference::ShapeHandle input_shape;
         TF_RETURN_IF_ERROR(context->WithRank(context->input(0), 4, &input_shape));
 
@@ -183,9 +182,9 @@ class BackprojectionFan2DOp : public OpKernel {
             const int64 in_width = GetTensorDim(input, FORMAT_NHWC, 'W');
             const int64 in_channel = GetTensorDim(input, FORMAT_NHWC, 'C');
             OP_REQUIRES(context, in_height == static_cast<int64>(param_.na), 
-                        errors::InvalidArgument("Input height must equal to that given in img_shape. "));
+                        errors::InvalidArgument("Input height must equal to that given in proj_shape. "));
             OP_REQUIRES(context, in_width == static_cast<int64>(param_.ns), 
-                        errors::InvalidArgument("Input width must equal to that given in img_shape. "));
+                        errors::InvalidArgument("Input width must equal to that given in proj_shape. "));
             OP_REQUIRES(context, in_channel == 1, 
                         errors::InvalidArgument("Input channel number must be 1. "));
             

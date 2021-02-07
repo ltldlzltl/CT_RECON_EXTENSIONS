@@ -2,8 +2,8 @@
  * @Description: implement ramp filter numpy extension library functions
  * @Author: Tianling Lyu
  * @Date: 2021-01-10 19:03:19
- * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-01-11 18:13:44
+ * @LastEditors: Tianling Lyu
+ * @LastEditTime: 2021-02-07 16:36:03
  */
 
 #include "numpy_ext/filter_npext.h"
@@ -105,16 +105,7 @@ DLL_EXPORT extern "C"
 int ramp_filter_create(unsigned int ns, unsigned int nrow, double ds, 
     double dsd, int type)
 {
-    std::string s_type;
-    switch (type) {
-        case 0: s_type = "par"; break;
-        case 1: s_type = "fan"; break;
-        case 2: s_type = "flat"; break;
-        default: {
-            throw std::runtime_error("Unknown filter type!");
-        }
-    }
-    ct_recon::FilterParam param(ns, nrow, ds, dsd, s_type);
+    ct_recon::FilterParam param(ns, nrow, ds, dsd, type);
     int handle = np_ext::ramp_filter_container_.create(param);
     return handle;
 }

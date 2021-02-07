@@ -2,8 +2,8 @@
 " @Description: Python tensorflow extension of CT reconstruction
 " @Author: Tianling Lyu
 " @Date: 2019-12-03 13:47:00
- " @LastEditors: Tianling Lyu
- " @LastEditTime: 2019-12-05 21:54:31
+ # @LastEditors: Tianling Lyu
+ # @LastEditTime: 2021-02-07 11:33:55
 """
 
 import math
@@ -22,6 +22,8 @@ _fp_par_grad = _ct_ops_module.forward_projection_parallel2d_grad
 _svbp_par = _ct_ops_module.single_view_bp_parallel2d
 _bp_fan = _ct_ops_module.backprojection_fan2d
 _bp_fan_grad = _ct_ops_module.backprojection_fan2d_grad
+_fanw = _ct_ops_module.fan_weighting
+_fanw_grad = _ct_ops_module.fan_weighting_grad
 
 # register gradients
 @ops.RegisterGradient("RampFilter")
@@ -72,8 +74,8 @@ def _forward_projection_parallel2d_grad(op, grad):
             fov=fov, method=method)
     return [in_grad]
 
-@ops.RegisterGradient("FanParallel2D")
-def _fan_parallel2d_grad(op, grad):
+@ops.RegisterGradient("FanBackprojection2D")
+def _fan_backprojection2d_grad(op, grad):
     img_shape = op.get_attr("img_shape")
     img_space = op.get_attr("img_space")
     img_offset = op.get_attr("img_offset")
@@ -90,6 +92,19 @@ def _fan_parallel2d_grad(op, grad):
             img_offset=img_offset, proj_shape=proj_shape, channel_space=channel_space, 
             channel_offset=channel_offset, orbit_start=orbit_start, orbit=orbit, 
             dso=dso, dsd=dsd, fov=fov, method=method)
+    return [in_grad]
+
+@ops.RegisterGradient("FanWeighting")
+def _fan_weighting_grad(op, grad):
+    proj_shape = op.get_attr("proj_shape")
+    channel_space = op.get_attr("channel_space")
+    channel_offset = op.get_attr("channel_offset")
+    dso = op.get_attr("dso")
+    dsd = op.get_attr("dsd")
+    tp = op.get_attr("type")
+    in_grad = _fanw_grad(proj_in=grad, proj_shape=proj_shape, 
+        channel_space=channel_space, channel_offset=channel_offset, dso=dso,
+        dsd=dsd, tp=tp)
     return [in_grad]
 
 # function wrappers
@@ -205,7 +220,22 @@ def fan_backprojection_2d(proj, img_shape, img_space, proj_shape,
         :param fov=-1: field of view, useless now. 
         :param method='pixdriven': bp operator, only 'pixdriven' is available now.
     """
-    return _bp_par(proj=proj, img_shape=img_shape, img_space=img_space, 
+    return _bp_fan(proj=proj, img_shape=img_shape, img_space=img_space, 
         img_offset=img_offset, proj_shape=proj_shape, channel_space=channel_space, 
         channel_offset=channel_offset, orbit_start=orbit_start, orbit=orbit, 
         dso=dso, dsd=dsd, fov=fov, method=method)
+
+def fan_weighting(proj, proj_shape, channel_space, channel_offset=0, 
+    dso=1000, dsd=1500, tp='fan'):
+    """
+    Fan weighting function. 
+        :param proj: input sinogram, [batch, nview, nchannel, 1]
+        :param proj_shape: list(int) with length=2. Input view number and channel number.
+        :param channel_space: distance between nearby channels.
+        :param channel_offset=0: difference between detector center and (ns-1)/2
+        :param dso=1000: distance between source and ISO center (mm).
+        :param dsd=1500: distance between source and detector center (mm).
+        :param tp='fan': geometry type, "fan" or "flat".
+    """
+    return _fanw(proj_in=proj, proj_shape=proj_shape, channel_space=channel_space, 
+        channel_offset=channel_offset, dso=dso, dsd=dsd, tp=tp)

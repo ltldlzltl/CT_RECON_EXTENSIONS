@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-30 20:10:31
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 10:38:14
+ * @LastEditTime: 2021-02-07 16:35:32
  */
 
 #include "include/filter.h"
@@ -56,11 +56,11 @@ bool RampFilterPrep<float>::calculate_on_gpu(float* filter, cudaStream_t stream)
 {
     int n_elements = 2*param_.ns+1;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-    if (param_.type == "par" || param_.type == "flat") {
+    if (param_.type == 0 || param_.type == 2) {
         RampFilterPrepParKernel<float>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
             (filter, param_, n_elements);
-    } else if (param_.type == "fan") {
+    } else if (param_.type == 1) {
         RampFilterPrepFanKernel<float>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
             (filter, param_, n_elements);
@@ -76,11 +76,11 @@ bool RampFilterPrep<double>::calculate_on_gpu(double* filter, cudaStream_t strea
 {
     int n_elements = 2*param_.ns+1;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-    if (param_.type == "par" || param_.type == "flat") {
+    if (param_.type == 0 || param_.type == 2) {
         RampFilterPrepParKernel<double>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
             (filter, param_, n_elements);
-    } else if (param_.type == "fan") {
+    } else if (param_.type == 1) {
         RampFilterPrepFanKernel<double>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
             (filter, param_, n_elements);

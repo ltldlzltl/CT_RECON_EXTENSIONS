@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-08 16:32:04
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-08 17:05:45
+ * @LastEditTime: 2021-02-07 16:23:40
  */
 
 #ifndef _CT_RECON_EXT_FAN_WEIGHTING_H_
@@ -23,16 +23,18 @@ struct FanWeightingParam
     unsigned int ns; // number of channels
     unsigned int nrow; // number of rows
     double ds;
+    double offset;
     double dso;
     double dsd;
-    std::string type; // can be "fan" or "flat"
+    int type; // 1 for "fan", 2 for "flat"
+    //std::string type; // can be "fan" or "flat"
 
     // Ctor
     FanWeightingParam() {}
     FanWeightingParam(unsigned int ns, unsigned int nrow, double ds,
-        double dso = -1, double dsd = -1, 
-        const std::string& type="fan")
-        : ns(ns), nrow(nrow), ds(ds), dso(dso), dsd(dsd), type(type)
+        double offset = 0, double dso = -1, double dsd = -1, int type = 1)
+        : ns(ns), nrow(nrow), ds(ds), offset(offset), dso(dso), dsd(dsd), 
+        type(type)
     {}
 }; // struct FanWeightingParam
 

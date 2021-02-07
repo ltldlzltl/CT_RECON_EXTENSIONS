@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 08:47:49
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 09:08:13
+ * @LastEditTime: 2021-02-07 16:20:28
  */
 
  #include "include/fan_weighting.h"
@@ -75,11 +75,11 @@ namespace ct_recon {
     {
         int n_elements = param_.ns*param_.nrow;
         CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-        if (param_.type == "fan") {
+        if (param_.type == 1) {
             FanWeightingKernel<float>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);
-        } else if (param_.type == "flat") {
+        } else if (param_.type == 2) {
             FlatWeightingKernel<float>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);
@@ -96,11 +96,11 @@ namespace ct_recon {
     {
         int n_elements = param_.ns*param_.nrow;
         CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-        if (param_.type == "fan") {
+        if (param_.type == 1) {
             FanWeightingKernel<double>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);
-        } else if (param_.type == "flat") {
+        } else if (param_.type == 2) {
             FlatWeightingKernel<double>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);
@@ -117,11 +117,11 @@ namespace ct_recon {
     {
         int n_elements = param_.ns*param_.nrow;
         CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-        if (param_.type == "fan") {
+        if (param_.type == 1) {
             FanWeightingGradKernel<float>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);
-        } else if (param_.type == "flat") {
+        } else if (param_.type == 2) {
             FlatWeightingGradKernel<float>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);
@@ -138,11 +138,11 @@ namespace ct_recon {
     {
         int n_elements = param_.ns*param_.nrow;
         CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-        if (param_.type == "fan") {
+        if (param_.type == 1) {
             FanWeightingGradKernel<double>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);
-        } else if (param_.type == "flat") {
+        } else if (param_.type == 2) {
             FlatWeightingGradKernel<double>
                 <<<config.block_count, config.thread_per_block, 0, stream>>>
                 (in, out, param_, n_elements);

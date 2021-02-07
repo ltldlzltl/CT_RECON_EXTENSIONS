@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-02 09:15:47
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-03 09:07:28
+ * @LastEditTime: 2021-02-07 16:40:07
  */
 
 #include "tensorflow/ramp_filter_ops.h"
@@ -88,7 +88,16 @@ public:
         OP_REQUIRES_OK(context, context->GetAttr("dsd", &dsd));
         OP_REQUIRES_OK(context, context->GetAttr("type", &type));
         OP_REQUIRES_OK(context, context->GetAttr("window", &window));
-        param_ = ct_recon::FilterParam(ns, nrow, ds, dsd, type, window);
+        int itype=0, iwindow=0;
+        if (type == "par") itype = 0;
+        else if (type == "fan") itype = 1;
+        else if (type == "flat") itype= 2;
+        else {
+            context->CtxFailure(__FILE__, __LINE__,
+                errors::InvalidArgument("Unrecognised geometry type. \
+                    Only par, fan or flat are available for ramp filter."));
+        }
+        param_ = ct_recon::FilterParam(ns, nrow, ds, dsd, itype, iwindow);
         // construct functors
         prep_ = std::unique_ptr<ct_recon::RampFilterPrep<T>>
             (new ct_recon::RampFilterPrep<T>(param_));
@@ -179,7 +188,16 @@ public:
         OP_REQUIRES_OK(context, context->GetAttr("dsd", &dsd));
         OP_REQUIRES_OK(context, context->GetAttr("type", &type));
         OP_REQUIRES_OK(context, context->GetAttr("window", &window));
-        param_ = ct_recon::FilterParam(ns, nrow, ds, dsd, type, window);
+        int itype=0, iwindow=0;
+        if (type == "par") itype = 0;
+        else if (type == "fan") itype = 1;
+        else if (type == "flat") itype= 2;
+        else {
+            context->CtxFailure(__FILE__, __LINE__,
+                errors::InvalidArgument("Unrecognised geometry type. \
+                    Only par, fan or flat are available for ramp filter."));
+        }
+        param_ = ct_recon::FilterParam(ns, nrow, ds, dsd, itype, iwindow);
         // construct functors
         prep_ = std::unique_ptr<ct_recon::RampFilterPrep<T>>
             (new ct_recon::RampFilterPrep<T>(param_));

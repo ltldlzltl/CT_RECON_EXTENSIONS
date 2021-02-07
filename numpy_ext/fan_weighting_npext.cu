@@ -2,8 +2,8 @@
  * @Description: implement fan weighting numpy extension library functions
  * @Author: Tianling Lyu
  * @Date: 2021-01-10 22:35:16
- * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-01-11 18:13:15
+ * @LastEditors: Tianling Lyu
+ * @LastEditTime: 2021-02-07 16:29:30
  */
 
 #include "numpy_ext/fan_weighting_npext.h"
@@ -85,17 +85,9 @@ bool FanWeightingNPExt::run(const FanWeightingRunParam& param)
 
 DLL_EXPORT extern "C"
 int fan_weighting_create(unsigned int ns, unsigned int nrow, double ds, 
-    double dso, double dsd, int type)
+    double offset, double dso, double dsd, int type)
 {
-    std::string s_type;
-    switch (type) {
-        case 1: s_type = "fan"; break;
-        case 2: s_type = "flat"; break;
-        default: {
-            throw std::runtime_error("Unknown filter type!");
-        }
-    }
-    ct_recon::FanWeightingParam param(ns, nrow, ds, dso, dsd, s_type);
+    ct_recon::FanWeightingParam param(ns, nrow, ds, offset, dso, dsd, type);
     int handle = np_ext::fan_w_container_.create(param);
     return handle;
 }

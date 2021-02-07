@@ -2,8 +2,8 @@
  " @Description: load ctrecon cpp functions using numpy
  " @Author: Tianling Lyu
  " @Date: 2021-01-10 09:49:40
- " @LastEditors: Tianling Lyu
- " @LastEditTime: 2021-01-10 23:30:56
+ # @LastEditors: Tianling Lyu
+ # @LastEditTime: 2021-02-05 11:28:12
 """
 
 import numpy as np
@@ -30,7 +30,7 @@ _clear_device.argtypes = []
 # fan weighting
 _fan_weighting_create = _lib.fan_weighting_create
 _fan_weighting_create.rettype = _int
-_fan_weighting_create.argtypes = [_uint, _uint, _double, _double, _double, 
+_fan_weighting_create.argtypes = [_uint, _uint, _double, _double, _double, _double, 
     _int]
 _fan_weighting_run = _lib.fan_weighting_run
 _fan_weighting_run.rettype = _bool
@@ -69,7 +69,7 @@ class FanFBP2DAngle:
         itype = 1
         _set_device(param["device"])
         self._fw_handle = _fan_weighting_create(param["ns"], param["na"], 
-            param["ds"], param["dso"], param["dsd"], itype)
+            param["ds"], param["offset_s"], param["dso"], param["dsd"], itype)
         self._flt_handle = _ramp_filter_create(param["ns"], param["na"], 
             param["ds"], param["dsd"], itype)
         self._bp_handle = _fan_bp_2d_angle_create(param["angles"], param["ns"], 

@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-07 10:56:33
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 09:48:26
+ * @LastEditTime: 2021-02-07 16:58:50
  */
 
 #include "include/bp_fan_2d.h"
@@ -34,8 +34,8 @@ int main()
     double dso = 870;
     double dsd = 1270;
     double fov = -1;
-    ct_recon::FanWeightingParam wparam(ns, na, ds, dso, dsd, "fan");
-    ct_recon::FilterParam fparam(ns, na, ds, dsd, "fan");
+    ct_recon::FanWeightingParam wparam(ns, na, ds, dso, dsd, 1);
+    ct_recon::FilterParam fparam(ns, na, ds, dsd, 1);
     ct_recon::FanBackprojection2DParam param(ns, na, ds, orbit, offset_s, 
         orbit_start, nx, ny, dx, dy, offset_x, offset_y, dso, dsd, fov);
     

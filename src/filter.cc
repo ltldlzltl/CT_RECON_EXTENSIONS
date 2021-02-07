@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 14:43:27
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-05 22:19:19
+ * @LastEditTime: 2021-02-07 16:34:32
  */
 
 #include "include/filter.h"
@@ -57,9 +57,9 @@ bool ramp_fan(T* filter, const FilterParam& param)
 template <typename T>
 bool RampFilterPrep<T>::calculate_on_cpu(T* filter) const
 {
-    if (param_.type == "par" || param_.type == "flat") {
+    if (param_.type == 0 || param_.type == 2) {
         if (!ramp_par(filter, param_)) return false;
-    } else if (param_.type == "fan") {
+    } else if (param_.type == 1) {
         if (!ramp_fan(filter, param_)) return false;
     } else {
         return false;
