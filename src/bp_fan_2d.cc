@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2020-12-13 20:36:29
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 10:46:48
+ * @LastEditTime: 2021-03-11 10:21:30
  */
 
 #include "include/bp_fan_2d.h"
@@ -26,7 +26,6 @@ bool FanBackprojection2DPixDrivenPrep::calculate_on_cpu(double* xpos,
     // variables
     unsigned int ix, iy, ia;
     double angle = this->param_.orbit_start;
-    double sin_angle, cos_angle;
     double posx = -centx * this->param_.dx, posy = centy * this->param_.dy;
     for (ia = 0; ia < this->param_.na; ++ia) {
         sincostbl[2*ia] = sin(angle);
@@ -105,8 +104,7 @@ bool FanBackprojection2DPixDrivenGradPrep::calculate_on_cpu(double* xpos,
     // variables
     unsigned int ix, iy, ia;
     double angle = this->param_.orbit_start;
-    double sin_angle, cos_angle;
-    double posx = -centx * this->param_.dx, posy;
+    double posx = -centx * this->param_.dx, posy = centy * this->param_.dy;;
     for (ia = 0; ia < this->param_.na; ++ia) {
         sincostbl[2*ia] = sin(angle);
         sincostbl[2*ia+1] = cos(angle);
@@ -118,7 +116,7 @@ bool FanBackprojection2DPixDrivenGradPrep::calculate_on_cpu(double* xpos,
     }
     for (iy = 0; iy < this->param_.ny; ++iy) {
         ypos[iy] = posy;
-        posy += this->param_.dy;
+        posy -= this->param_.dy;
     }
     return true;
 }
@@ -154,8 +152,8 @@ bool FanBackprojection2DPixDrivenGrad<T>::calculate_on_cpu(const T* img,
                     is1 = static_cast<unsigned int>(floor(s));
                     is2 = static_cast<unsigned int>(ceil(s));
                     u = s - is1;
-                    grad[is1 + ia*this->param_.ns] += (*img_ptr) / static_cast<T>(w * (1-u));
-                    grad[is2 + ia*this->param_.ns] += (*img_ptr) / static_cast<T>(w * u);
+                    grad[is1 + ia*this->param_.ns] += (*img_ptr) * static_cast<T>(w * (1-u));
+                    grad[is2 + ia*this->param_.ns] += (*img_ptr) * static_cast<T>(w * u);
                 }
                 // next angle
                 a_ptr += 2;
@@ -168,7 +166,7 @@ bool FanBackprojection2DPixDrivenGrad<T>::calculate_on_cpu(const T* img,
         ++y_ptr;
     }
     // apply weight
-    T weight = static_cast<T>(factor / fabs(this->param_.orbit));
+    T weight = static_cast<T>(fabs(this->param_.orbit) / factor);
     for (int i = 0; i < this->param_.ns*this->param_.na; ++i)
         grad[i] *= weight;
     return true;
