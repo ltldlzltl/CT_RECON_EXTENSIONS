@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-02 09:15:47
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-02-07 16:40:07
+ * @LastEditTime: 2021-03-11 14:37:20
  */
 
 #include "tensorflow/ramp_filter_ops.h"
@@ -99,8 +99,8 @@ public:
         }
         param_ = ct_recon::FilterParam(ns, nrow, ds, dsd, itype, iwindow);
         // construct functors
-        prep_ = std::unique_ptr<ct_recon::RampFilterPrep<T>>
-            (new ct_recon::RampFilterPrep<T>(param_));
+        prep_ = std::unique_ptr<ct_recon::RampFilterPrep>
+            (new ct_recon::RampFilterPrep(param_));
         filt_ = std::unique_ptr<ct_recon::RampFilter<T>>
             (new ct_recon::RampFilter<T>(param_));
         // allocate buffer
@@ -144,8 +144,8 @@ public:
 
         // initialize if needed
         if (!initialized_) {
-            LaunchRampFilterPrepOp<Device, T>()(context, 
-                filter_.AccessTensor(context)->template flat<T>().data(), 
+            LaunchRampFilterPrepOp<Device>()(context, 
+                filter_.AccessTensor(context)->template flat<double>().data(), 
                 prep_.get());
             initialized_ = true;
         }
@@ -156,7 +156,7 @@ public:
         OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &output));
         // calculate results
         LaunchRampFilterOp<Device, T>()(context, input.template flat<T>().data(), 
-            filter_.AccessTensor(context)->template flat<T>().data(), 
+            filter_.AccessTensor(context)->template flat<double>().data(), 
             output->template flat<T>().data(), filt_.get(), in_batch, 
             sizeproj);
         return;
@@ -165,7 +165,7 @@ public:
 private:
     // parameters and functors
     ct_recon::FilterParam param_;
-    std::unique_ptr<ct_recon::RampFilterPrep<T>> prep_;
+    std::unique_ptr<ct_recon::RampFilterPrep> prep_;
     std::unique_ptr<ct_recon::RampFilter<T>> filt_;
     bool initialized_;
     // buffer
@@ -199,10 +199,13 @@ public:
         }
         param_ = ct_recon::FilterParam(ns, nrow, ds, dsd, itype, iwindow);
         // construct functors
-        prep_ = std::unique_ptr<ct_recon::RampFilterPrep<T>>
-            (new ct_recon::RampFilterPrep<T>(param_));
+        prep_ = std::unique_ptr<ct_recon::RampFilterPrep>
+            (new ct_recon::RampFilterPrep(param_));
         filt_ = std::unique_ptr<ct_recon::RampFilterGrad<T>>
             (new ct_recon::RampFilterGrad<T>(param_));
+        // allocate buffer
+        context->allocate_persistent(DT_DOUBLE, 
+            TensorShape({2*param_.ns+1}), &filter_, nullptr);
     }
 
     void Compute(OpKernelContext* context) override {
@@ -241,10 +244,11 @@ public:
 
         // initialize if needed
         if (!initialized_) {
-            LaunchRampFilterPrepOp<Device, T>()(context, 
-                filter_.AccessTensor(context)->template flat<T>().data(), 
+            LaunchRampFilterPrepOp<Device>()(context, 
+                filter_.AccessTensor(context)->template flat<double>().data(), 
                 prep_.get());
             initialized_ = true;
+            LOG(INFO) << "Initialization finished!" <<std::endl;
         }
 
         // allocate output tensor
@@ -253,7 +257,7 @@ public:
         OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &output));
         // calculate results
         LaunchRampFilterGradOp<Device, T>()(context, input.template flat<T>().data(), 
-            filter_.AccessTensor(context)->template flat<T>().data(), 
+            filter_.AccessTensor(context)->template flat<double>().data(), 
             output->template flat<T>().data(), filt_.get(), in_batch, 
             sizeproj);
         return;
@@ -262,7 +266,7 @@ public:
 private:
     // parameters and functors
     ct_recon::FilterParam param_;
-    std::unique_ptr<ct_recon::RampFilterPrep<T>> prep_;
+    std::unique_ptr<ct_recon::RampFilterPrep> prep_;
     std::unique_ptr<ct_recon::RampFilterGrad<T>> filt_;
     bool initialized_;
     // buffer

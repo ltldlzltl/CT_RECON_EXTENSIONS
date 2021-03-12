@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-12-01 10:22:45
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-05 13:46:40
+ * @LastEditTime: 2021-03-11 14:38:31
  */
 
 #ifndef TENSORFLOW_CORE_USER_OPS_RAMP_FILTER_OPS_H_
@@ -17,10 +17,10 @@ namespace tensorflow
 {
 
 // Functor for ramp filter preparation and ramp filter gradient preparation
-template <typename Device, typename T>
+template <typename Device>
 struct LaunchRampFilterPrepOp {
-    bool operator()(OpKernelContext* ctx, T* filter, 
-        const ct_recon::RampFilterPrep<T>* prep) {
+    bool operator()(OpKernelContext* ctx, double* filter, 
+        const ct_recon::RampFilterPrep* prep) {
         return prep->calculate_on_cpu(filter);
     }
 }; // struct LaunchRampFilterPrepOp
@@ -28,7 +28,7 @@ struct LaunchRampFilterPrepOp {
 // Functor for calculating ramp filter results
 template <typename Device, typename T>
 struct LaunchRampFilterOp {
-    bool operator()(OpKernelContext* ctx, const T* in, const T* filter, 
+    bool operator()(OpKernelContext* ctx, const T* in, const double* filter, 
         T* out, const ct_recon::RampFilter<T>* ramp, const int nbatch, 
         const unsigned int sizeproj) {
         bool result = true;
@@ -47,7 +47,7 @@ struct LaunchRampFilterOp {
 // Functor for calculating ramp filter gradient
 template <typename Device, typename T>
 struct LaunchRampFilterGradOp {
-    bool operator()(OpKernelContext* ctx, const T* in, const T* filter, 
+    bool operator()(OpKernelContext* ctx, const T* in, const double* filter, 
         T* out, const ct_recon::RampFilterGrad<T>* ramp, const int nbatch, 
         const unsigned int sizeproj) {
         bool result = true;
@@ -74,10 +74,10 @@ struct LaunchRampFilterGradOp {
 namespace tensorflow
 {
 // partial specializations for GPU devices
-template <typename T>
-struct LaunchRampFilterPrepOp<Eigen::GpuDevice, T> {
-    bool operator()(OpKernelContext* ctx, T* filter, 
-        const ct_recon::RampFilterPrep<T> *prep)
+template <>
+struct LaunchRampFilterPrepOp<Eigen::GpuDevice> {
+    bool operator()(OpKernelContext* ctx, double* filter, 
+        const ct_recon::RampFilterPrep *prep)
     {
         auto device = ctx->eigen_gpu_device();
         return prep->calculate_on_gpu(filter, device.stream());
@@ -87,7 +87,7 @@ struct LaunchRampFilterPrepOp<Eigen::GpuDevice, T> {
 template <typename T>
 struct LaunchRampFilterOp<Eigen::GpuDevice, T> {
     bool operator()(OpKernelContext* ctx, const T* in, 
-        const T* filter, T* out, const ct_recon::RampFilter<T> *filt, 
+        const double* filter, T* out, const ct_recon::RampFilter<T> *filt, 
         const int nbatch, const unsigned int sizeproj)
     {
         auto device = ctx->eigen_gpu_device();
@@ -106,7 +106,7 @@ struct LaunchRampFilterOp<Eigen::GpuDevice, T> {
 
 template <typename T>
 struct LaunchRampFilterGradOp<Eigen::GpuDevice, T> {
-    bool operator()(OpKernelContext* ctx, const T* in, const T* filter, 
+    bool operator()(OpKernelContext* ctx, const T* in, const double* filter, 
         T* out, const ct_recon::RampFilterGrad<T> *grad, const int nbatch, 
         const unsigned int sizeproj)
     {
