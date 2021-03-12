@@ -3,7 +3,7 @@
 " @Author: Tianling Lyu
 " @Date: 2019-12-03 13:47:00
  # @LastEditors: Tianling Lyu
- # @LastEditTime: 2021-02-07 11:33:55
+ # @LastEditTime: 2021-03-11 09:43:47
 """
 
 import math
@@ -74,7 +74,7 @@ def _forward_projection_parallel2d_grad(op, grad):
             fov=fov, method=method)
     return [in_grad]
 
-@ops.RegisterGradient("FanBackprojection2D")
+@ops.RegisterGradient("BackprojectionFan2D")
 def _fan_backprojection2d_grad(op, grad):
     img_shape = op.get_attr("img_shape")
     img_space = op.get_attr("img_space")
@@ -101,7 +101,7 @@ def _fan_weighting_grad(op, grad):
     channel_offset = op.get_attr("channel_offset")
     dso = op.get_attr("dso")
     dsd = op.get_attr("dsd")
-    tp = op.get_attr("type")
+    tp = op.get_attr("tp")
     in_grad = _fanw_grad(proj_in=grad, proj_shape=proj_shape, 
         channel_space=channel_space, channel_offset=channel_offset, dso=dso,
         dsd=dsd, tp=tp)
@@ -125,6 +125,24 @@ def ramp_filter(proj, n_channel, n_row, channel_space, dsd=-1, type="par",
         :param window="None": apply window on filter, not implemented yet. 
     """
     return _rampfilter(inproj=proj, ns=n_channel, nrow=n_row, ds=channel_space, 
+        dsd=dsd, type=type, window=window)
+
+def ramp_filter_grad(grad_in, n_channel, n_row, channel_space, dsd=-1, type="par", 
+                window="None"):
+    """
+    Ramp filter function. Returns a sinogram the same size as proj.
+        :param grad_in: input gradient, 4-D or 5-D, NHWC format, channel number 
+                     must be 1
+        :param n_channel: number of channels on the detector
+        :param n_row: total number of rows in the sinogram. 
+        :param channel_space: distance between nearby channels. 
+        :param dsd=-1: distance between projection source and detector, only
+                       useful for "fan" type.
+        :param type="par": "par" for parallel beam, "fan" for equiangular 
+                            fanbeam, "flat" for equispacing fanbeam. 
+        :param window="None": apply window on filter, not implemented yet. 
+    """
+    return _ramp_grad(inimg=grad_in, ns=n_channel, nrow=n_row, ds=channel_space, 
         dsd=dsd, type=type, window=window)
 
 
@@ -225,6 +243,31 @@ def fan_backprojection_2d(proj, img_shape, img_space, proj_shape,
         channel_offset=channel_offset, orbit_start=orbit_start, orbit=orbit, 
         dso=dso, dsd=dsd, fov=fov, method=method)
 
+def fan_backprojection_2d_grad(grad_in, img_shape, img_space, proj_shape, 
+    channel_space, img_offset=[0, 0], channel_offset=0, orbit_start=0, 
+    orbit=math.pi/180, dso=1000, dsd=1500, fov=-1, method='pixdriven'):
+    """
+    2-D parallel backprojection function. 
+        :param grad_in: input gradient, [batch, nview, nchannel, 1]
+        :param img_shape: list(int) with length=2. Height and width of result.
+        :param img_space: list(int) with length=2. Spacing between image pixels.
+        :param proj_shape: list(int) with length=2. Input view number and channel number.
+        :param channel_space: distance between nearby channels.
+        :param img_offset=[0, 0]: difference between ISO center and 
+                                   [(nx-1)/2, (ny-1)/2].
+        :param channel_offset=0: difference between detector center and (ns-1)/2
+        :param orbit_start=0: angle at the first view
+        :param orbit=math.pi/180: rotated angle between nearby views
+        :param dso=1000: distance between source and ISO center (mm).
+        :param dsd=1500: distance between source and detector center (mm).
+        :param fov=-1: field of view, useless now. 
+        :param method='pixdriven': bp operator, only 'pixdriven' is available now.
+    """
+    return _bp_fan_grad(img=grad_in, img_shape=img_shape, img_space=img_space, 
+        img_offset=img_offset, proj_shape=proj_shape, channel_space=channel_space, 
+        channel_offset=channel_offset, orbit_start=orbit_start, orbit=orbit, 
+        dso=dso, dsd=dsd, fov=fov, method=method)
+
 def fan_weighting(proj, proj_shape, channel_space, channel_offset=0, 
     dso=1000, dsd=1500, tp='fan'):
     """
@@ -238,4 +281,19 @@ def fan_weighting(proj, proj_shape, channel_space, channel_offset=0,
         :param tp='fan': geometry type, "fan" or "flat".
     """
     return _fanw(proj_in=proj, proj_shape=proj_shape, channel_space=channel_space, 
+        channel_offset=channel_offset, dso=dso, dsd=dsd, tp=tp)
+
+def fan_weighting_grad(grad_in, proj_shape, channel_space, channel_offset=0, 
+    dso=1000, dsd=1500, tp='fan'):
+    """
+    Fan weighting function. 
+        :param grad_in: input gradient, [batch, nview, nchannel, 1]
+        :param proj_shape: list(int) with length=2. Input view number and channel number.
+        :param channel_space: distance between nearby channels.
+        :param channel_offset=0: difference between detector center and (ns-1)/2
+        :param dso=1000: distance between source and ISO center (mm).
+        :param dsd=1500: distance between source and detector center (mm).
+        :param tp='fan': geometry type, "fan" or "flat".
+    """
+    return _fanw_grad(proj_in=grad_in, proj_shape=proj_shape, channel_space=channel_space, 
         channel_offset=channel_offset, dso=dso, dsd=dsd, tp=tp)
