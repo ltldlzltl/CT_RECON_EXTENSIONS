@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-05 11:00:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-09 10:47:23
+ * @LastEditTime: 2021-03-12 10:02:54
  */
 
  #include "include/bp_fan_2d.h"
@@ -116,11 +116,12 @@ __global__ void FanBackprojection2DPixDrivenGradKernel1(const T* img, T* grad,
     const double* xpos, const double* ypos, const double* sincostbl, 
     const FanBackprojection2DParam param, const int n_elements)
 {
-    const T factor = round(fabs(param.na*param.orbit) / M_PI) / fabs(param.orbit);
+    const T factor =  fabs(param.orbit) / round(fabs(param.na*param.orbit) / M_PI);
     const double cents = (static_cast<double>(param.ns-1)) / 2 + 
         param.offset_s;
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
         int ia = thread_id;
+        if (ia >= param.na) continue;
         double s, u, d_loop, r_loop, w, x, y;
         int is1, is2, ix, iy;
         const double sinangle = sincostbl[2*ia];
@@ -141,8 +142,8 @@ __global__ void FanBackprojection2DPixDrivenGradKernel1(const T* img, T* grad,
                     is1 = static_cast<unsigned int>(floor(s));
                     is2 = static_cast<unsigned int>(ceil(s));
                     u = s - is1;
-                    grad_ptr[is1] += (*img_ptr) * factor / static_cast<T>(w * (1-u));
-                    grad_ptr[is2] += (*img_ptr) * factor / static_cast<T>(w * u);
+                    grad_ptr[is1] += (*img_ptr) * factor * static_cast<T>(w * (1-u));
+                    grad_ptr[is2] += (*img_ptr) * factor * static_cast<T>(w * u);
                 }
                 ++img_ptr;
             }
@@ -152,13 +153,13 @@ __global__ void FanBackprojection2DPixDrivenGradKernel1(const T* img, T* grad,
 }
 
 // bp gradient kernel implementation 2
-// parallel on x and y, use atomic add
+// parallel on x and y, use atomic add (much faster compared to impl 1)
 template <typename T>
 __global__ void FanBackprojection2DPixDrivenGradKernel2(const T* img, T* grad, 
     const double* xpos, const double* ypos, const double* sincostbl, 
     const FanBackprojection2DParam param, const int n_elements)
 {
-    const T factor = round(fabs(param.na*param.orbit) / M_PI) / fabs(param.orbit);
+    const T factor =  fabs(param.orbit) / round(fabs(param.na*param.orbit) / M_PI);
     const double cents = (static_cast<double>(param.ns-1)) / 2 + 
         param.offset_s;
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
@@ -182,8 +183,8 @@ __global__ void FanBackprojection2DPixDrivenGradKernel2(const T* img, T* grad,
                 is1 = floor(s);
                 is2 = ceil(s);
                 u = s - is1;
-                atomicAdd(proj_ptr+is1, value * factor / static_cast<T>(w * (1-u)));
-                atomicAdd(proj_ptr+is2, value * factor / static_cast<T>(w * u));
+                atomicAdd(proj_ptr+is1, value * factor * static_cast<T>(w * (1-u)));
+                atomicAdd(proj_ptr+is2, value * factor * static_cast<T>(w * u));
             }
             proj_ptr += param.ns;
             a_ptr += 2;
@@ -272,6 +273,8 @@ bool FanBackprojection2DPixDrivenGrad<float>::calculate_on_gpu(const float* img,
 {
     int n_elements = this->param_.nx * this->param_.ny;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
+    ClearElements<float><<<config.block_count, config.thread_per_block, 0, stream>>>
+        (grad, this->param_.ns*this->param_.na);
     if (FAN_BP_PIX_DRIVEN_KERNEL == 1) {
         FanBackprojection2DPixDrivenGradKernel1<float>
             <<<config.block_count, config.thread_per_block, 0, stream>>>
@@ -294,6 +297,8 @@ bool FanBackprojection2DPixDrivenGrad<double>::calculate_on_gpu(const double* im
 {
     int n_elements = this->param_.nx * this->param_.ny;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
+    ClearElements<double><<<config.block_count, config.thread_per_block, 0, stream>>>
+        (grad, this->param_.ns*this->param_.na);
     if (FAN_BP_PIX_DRIVEN_KERNEL == 1) {
         FanBackprojection2DPixDrivenGradKernel1<double>
             <<<config.block_count, config.thread_per_block, 0, stream>>>

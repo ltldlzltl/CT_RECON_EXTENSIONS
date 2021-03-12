@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-09 08:47:49
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-02-07 16:20:28
+ * @LastEditTime: 2021-03-11 10:28:59
  */
 
  #include "include/fan_weighting.h"
@@ -49,7 +49,7 @@ namespace ct_recon {
         for (int thread_id : CudaGridRangeX<int>(n_elements)) {
             int is = thread_id % param.ns;
             double s = param.ds * (static_cast<double>(is) - cents);
-            double w = param.dsd / param.dso * fabs(cos(atan2(s, param.dsd)));
+            double w = param.dsd * (param.dso * fabs(cos(atan2(s, param.dsd))));
             out[thread_id] = in[thread_id] * w;
         }
         return;
@@ -63,7 +63,7 @@ namespace ct_recon {
         for (int thread_id : CudaGridRangeX<int>(n_elements)) {
             int is = thread_id % param.ns;
             double s = param.ds * (static_cast<double>(is) - cents);
-            double w = param.dsd / param.dso * fabs(cos(s / param.dsd));
+            double w = param.dsd * (param.dso * fabs(cos(s / param.dsd)));
             out[thread_id] = in[thread_id] * w;
         }
         return;

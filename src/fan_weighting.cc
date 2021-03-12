@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2021-01-08 17:08:56
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-02-07 16:18:21
+ * @LastEditTime: 2021-03-11 10:29:13
  */
 
 #include "include/fan_weighting.h"
@@ -53,7 +53,7 @@ bool FanWeightingGrad<T>::calculate_on_cpu(const T* in, T* out) const
             return false;
         }
         for (ia = 0; ia < this->param_.nrow; ++ia)
-            out[is + ia*this->param_.ns] = in[is + ia*this->param_.ns] / w;
+            out[is + ia*this->param_.ns] = in[is + ia*this->param_.ns] * w;
     }
     return true;
 }

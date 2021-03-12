@@ -4,7 +4,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-13 14:24:28
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-01-05 14:08:54
+ * @LastEditTime: 2021-03-12 10:00:47
  */
 
 #ifndef _CT_RECON_EXT_CUDA_COM_H_
@@ -15,7 +15,7 @@
 #include <cuda_runtime.h>
 #include <algorithm>
 
-#define FAN_BP_PIX_DRIVEN_KERNEL 1
+#define FAN_BP_PIX_DRIVEN_KERNEL 2
 
 inline int DivUp(int a, int b) { return (a + b - 1) / b; }
 

@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-22 19:30:16
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2019-12-08 14:51:25
+ * @LastEditTime: 2021-02-18 09:58:14
  */
 
 #ifndef _CT_RECON_EXT_BP_PAR_2D_H_
@@ -235,10 +235,10 @@ public:
 	~ParallelBackprojection2DDisDrivenPrep() {}
 	// utility functions
 	bool calculate_on_cpu(double* xcos, double* ysin,
-		int* buffer) const override {};
+		int* buffer) const override { return false; };
 #ifdef USE_CUDA
 	bool calculate_on_gpu(double* xcos, double* ysin,
-		int* buffer, cudaStream_t) const override {};
+		int* buffer, cudaStream_t) const override { return false; };
 #endif
 }; // class ParallelBackprojection2DDisDrivenPrep
 
@@ -253,10 +253,10 @@ public:
     ~ParallelBackprojection2DDisDriven() {}
     // utility functions
     bool calculate_on_cpu(const T* proj, T* img, const double* xcos, 
-        const double* ysin, const int*) const override {};
+        const double* ysin, const int*) const override { return false;};
 #ifdef USE_CUDA
     bool calculate_on_gpu(const T* proj, T* img, const double* xcos, 
-        const double* ysin, const int*, cudaStream_t) const override {};
+        const double* ysin, const int*, cudaStream_t) const override { return false; };
 #endif
 }; // class ParallelBackprojection2DDisDriven
 
@@ -271,10 +271,10 @@ public:
 	~ParallelBackprojection2DDisDrivenGradPrep() {}
 	// utility functions
 	bool calculate_on_cpu(double* begins, double* offsets,
-		bool* usex) const override {};
+		bool* usex) const override { return false; };
 #ifdef USE_CUDA
 	bool calculate_on_gpu(double* begins, double* offsets,
-		bool* usex, cudaStream_t) const override {};
+		bool* usex, cudaStream_t) const override { return false; };
 #endif
 }; // class ParallelBackprojection2DDisDrivenGradPrep
 
@@ -290,10 +290,10 @@ public:
     ~ParallelBackprojection2DDisDrivenGrad() {}
     // utility functions
     bool calculate_on_cpu(const T* img, T* grad, const double*, 
-        const double*, const bool*) const override {};
+        const double*, const bool*) const override { return false; };
 #ifdef USE_CUDA
     bool calculate_on_gpu(const T* img, T* grad, const double*, 
-        const double*, const bool*, cudaStream_t) const override {};
+        const double*, const bool*, cudaStream_t) const override { return false; };
 #endif
 }; // class ParallelBackprojection2DDisDrivenGrad
 
