@@ -2,8 +2,8 @@
  * @Description: classes and structs for ramp filter numpy extension
  * @Author: Tianling Lyu
  * @Date: 2021-01-10 18:51:45
- * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-01-11 18:10:09
+ * @LastEditors: Tianling Lyu
+ * @LastEditTime: 2021-03-11 14:39:38
  */
 
 #ifndef _NP_EXT_FILTER_H_
@@ -44,7 +44,7 @@ namespace np_ext {
         ct_recon::FilterParam param_;
         bool allocated_;
 
-        ct_recon::RampFilterPrep<double> flt_prep_;
+        ct_recon::RampFilterPrep flt_prep_;
         ct_recon::RampFilter<double> flt_;
     }; // class RampFilterNPExt
 

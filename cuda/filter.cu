@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-30 20:10:31
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-02-07 16:35:32
+ * @LastEditTime: 2021-03-11 14:31:15
  */
 
 #include "include/filter.h"
@@ -20,8 +20,7 @@
 
 namespace ct_recon {
 #ifdef USE_CUDA
-template <typename T>
-__global__ void RampFilterPrepParKernel(T* filter, const FilterParam param, 
+__global__ void RampFilterPrepParKernel(double* filter, const FilterParam param, 
     const int n_elements)
 {
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
@@ -33,8 +32,7 @@ __global__ void RampFilterPrepParKernel(T* filter, const FilterParam param,
     return;
 }
 
-template <typename T>
-__global__ void RampFilterPrepFanKernel(T* filter, const FilterParam param, 
+__global__ void RampFilterPrepFanKernel(double* filter, const FilterParam param, 
     const int n_elements)
 {
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
@@ -51,37 +49,16 @@ __global__ void RampFilterPrepFanKernel(T* filter, const FilterParam param,
     return;
 }
 
-template <>
-bool RampFilterPrep<float>::calculate_on_gpu(float* filter, cudaStream_t stream) const
+bool RampFilterPrep::calculate_on_gpu(double* filter, cudaStream_t stream) const
 {
     int n_elements = 2*param_.ns+1;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
     if (param_.type == 0 || param_.type == 2) {
-        RampFilterPrepParKernel<float>
+        RampFilterPrepParKernel
             <<<config.block_count, config.thread_per_block, 0, stream>>>
             (filter, param_, n_elements);
     } else if (param_.type == 1) {
-        RampFilterPrepFanKernel<float>
-            <<<config.block_count, config.thread_per_block, 0, stream>>>
-            (filter, param_, n_elements);
-    } else {
-        return false;
-    }
-	cudaError_t err = cudaDeviceSynchronize();
-    return err==cudaSuccess;
-}
-
-template <>
-bool RampFilterPrep<double>::calculate_on_gpu(double* filter, cudaStream_t stream) const
-{
-    int n_elements = 2*param_.ns+1;
-    CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);
-    if (param_.type == 0 || param_.type == 2) {
-        RampFilterPrepParKernel<double>
-            <<<config.block_count, config.thread_per_block, 0, stream>>>
-            (filter, param_, n_elements);
-    } else if (param_.type == 1) {
-        RampFilterPrepFanKernel<double>
+        RampFilterPrepFanKernel
             <<<config.block_count, config.thread_per_block, 0, stream>>>
             (filter, param_, n_elements);
     } else {
@@ -92,7 +69,7 @@ bool RampFilterPrep<double>::calculate_on_gpu(double* filter, cudaStream_t strea
 }
 
 template <typename T>
-__global__ void RampFilterKernel(const T* in, const T* filter, T* out, 
+__global__ void RampFilterKernel(const T* in, const double* filter, T* out, 
     const FilterParam param, const int n_elements)
 {
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
@@ -113,7 +90,7 @@ __global__ void RampFilterKernel(const T* in, const T* filter, T* out,
 }
 
 template <>
-bool RampFilter<float>::calculate_on_gpu(const float* in, const float* filter, 
+bool RampFilter<float>::calculate_on_gpu(const float* in, const double* filter, 
     float* out, cudaStream_t stream) const
 {
     int n_elements = param_.ns*param_.nrow;
@@ -139,7 +116,7 @@ bool RampFilter<double>::calculate_on_gpu(const double* in, const double* filter
 }
 
 template <typename T>
-__global__ void RampFilterGradKernel(const T* in, const T* filter, T* out, 
+__global__ void RampFilterGradKernel(const T* in, const double* filter, T* out, 
     const FilterParam param, const int n_elements)
 {
     for (int thread_id : CudaGridRangeX<int>(n_elements)) {
@@ -150,8 +127,10 @@ __global__ void RampFilterGradKernel(const T* in, const T* filter, T* out,
         const T* in_ptr = in + irow*param.ns;
         for (ipos = -int(param.ns); ipos < int(param.ns); ++ipos) {
             ipos2 = is + ipos;
-            if (ipos2 >= 0 && ipos2 < param.ns)
-                sum += in_ptr[ipos2] * filter[ipos];
+            if (ipos2 >= 0 && ipos2 < param.ns) {
+                if (filter[ipos] > 0 || filter[ipos] < 0)
+                    sum += in_ptr[ipos2] * filter[ipos];
+            }
         }
         out[thread_id] = sum * param.ds;
     }
@@ -160,7 +139,7 @@ __global__ void RampFilterGradKernel(const T* in, const T* filter, T* out,
 
 template <>
 bool RampFilterGrad<float>::calculate_on_gpu(const float* in, 
-    const float* filter, float* out, cudaStream_t stream) const
+    const double* filter, float* out, cudaStream_t stream) const
 {
     int n_elements = param_.ns*param_.nrow;
     CudaLaunchConfig config = GetCudaLaunchConfig(n_elements);

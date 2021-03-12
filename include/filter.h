@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 11:52:58
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-02-07 16:31:37
+ * @LastEditTime: 2021-03-11 14:27:09
  */
 
 #ifndef _CT_RECON_EXT_FILTER_H_
@@ -35,7 +35,6 @@ struct FilterParam
     {}
 }; // struct FilterParam
 
-template <typename T>
 class RampFilterPrep
 {
 public:
@@ -45,9 +44,9 @@ public:
     {}
     ~RampFilterPrep() {}
     // utility functions
-    bool calculate_on_cpu(T* filter) const;
+    bool calculate_on_cpu(double* filter) const;
 #ifdef USE_CUDA
-    bool calculate_on_gpu(T* filter, cudaStream_t) const;
+    bool calculate_on_gpu(double* filter, cudaStream_t) const;
 #endif
 
 private:
@@ -64,9 +63,9 @@ public:
     {}
     ~RampFilter() {}
     // utility functions
-    bool calculate_on_cpu(const T* in, const T* filter, T* out) const;
+    bool calculate_on_cpu(const T* in, const double* filter, T* out) const;
 #ifdef USE_CUDA
-    bool calculate_on_gpu(const T* in, const T* filter, T* out, 
+    bool calculate_on_gpu(const T* in, const double* filter, T* out, 
         cudaStream_t) const;
 #endif
 private:
@@ -83,9 +82,9 @@ public:
     {}
     ~RampFilterGrad() {}
     // utility functions
-    bool calculate_on_cpu(const T* in, const T* filter, T* out) const;
+    bool calculate_on_cpu(const T* in, const double* filter, T* out) const;
 #ifdef USE_CUDA
-    bool calculate_on_gpu(const T* in, const T* filter, T* out, 
+    bool calculate_on_gpu(const T* in, const double* filter, T* out, 
         cudaStream_t) const;
 #endif
 private:

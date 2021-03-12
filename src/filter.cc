@@ -3,7 +3,7 @@
  * @Author: Tianling Lyu
  * @Date: 2019-11-28 14:43:27
  * @LastEditors: Tianling Lyu
- * @LastEditTime: 2021-02-07 16:34:32
+ * @LastEditTime: 2021-03-11 14:30:32
  */
 
 #include "include/filter.h"
@@ -16,46 +16,43 @@ namespace ct_recon
 {
 
 // ramp filter for parallel and flat beam
-template <typename T>
-bool ramp_par(T* filter, const FilterParam& param)
+bool ramp_par(double* filter, const FilterParam& param)
 {
-    T* pfilter = filter + param.ns;
-    T ds2_inv = 1.0 / (param.ds * param.ds);
-    T pi2_inv = 1.0 / (M_PI*M_PI);
+    double* pfilter = filter + param.ns;
+    double ds2_inv = 1.0 / (param.ds * param.ds);
+    double pi2_inv = 1.0 / (M_PI*M_PI);
     for (int ipos = -static_cast<int>(param.ns); ipos <= static_cast<int>(param.ns); ++ipos) {
         if (ipos == 0) {
             pfilter[ipos] = 0.25 * ds2_inv;
         } else if (ipos % 2 == 0) {
             pfilter[ipos] = 0;
         } else {
-            pfilter[ipos] = -pi2_inv * ds2_inv  / static_cast<T>(ipos*ipos);
+            pfilter[ipos] = -pi2_inv * ds2_inv  / static_cast<double>(ipos*ipos);
         }
     }
     return true;
 }
 
 // ramp filter for fan beam
-template <typename T>
-bool ramp_fan(T* filter, const FilterParam& param)
+bool ramp_fan(double* filter, const FilterParam& param)
 {
-    T* pfilter = filter + param.ns;
-    T pidsd2_inv = 1.0 / (M_PI*M_PI*param.dsd*param.dsd);
-    T sin_angle;
+    double* pfilter = filter + param.ns;
+    double pidsd2_inv = 1.0 / (M_PI*M_PI*param.dsd*param.dsd);
+    double sin_angle;
     for (int ipos = -static_cast<int>(param.ns); ipos <= static_cast<int>(param.ns); ++ipos) {
         if (ipos == 0) {
             pfilter[ipos] = 0.25 / (param.ds*param.ds);
         } else if (ipos % 2 == 0) {
             pfilter[ipos] = 0;
         } else {
-            sin_angle = std::sin(static_cast<T>(ipos) * param.ds / param.dsd);
+            sin_angle = std::sin(static_cast<double>(ipos) * param.ds / param.dsd);
             pfilter[ipos] = -pidsd2_inv  / (sin_angle*sin_angle);
         }
     }
     return true;
 }
 
-template <typename T>
-bool RampFilterPrep<T>::calculate_on_cpu(T* filter) const
+bool RampFilterPrep::calculate_on_cpu(double* filter) const
 {
     if (param_.type == 0 || param_.type == 2) {
         if (!ramp_par(filter, param_)) return false;
@@ -67,13 +64,10 @@ bool RampFilterPrep<T>::calculate_on_cpu(T* filter) const
     return true;
 }
 
-template class RampFilterPrep<float>;
-template class RampFilterPrep<double>;
-
 template <typename T>
-bool RampFilter<T>::calculate_on_cpu(const T* in, const T* filter, T* out) const
+bool RampFilter<T>::calculate_on_cpu(const T* in, const double* filter, T* out) const
 {
-    const T* filter_ptr = filter + param_.ns;
+    const double* filter_ptr = filter + param_.ns;
     const T* in_ptr = in;
     T* out_ptr = out;
     // variables
@@ -101,9 +95,9 @@ template class RampFilter<double>;
 
 // the gradient of filtering is correlating
 template <typename T>
-bool RampFilterGrad<T>::calculate_on_cpu(const T* in, const T* filter, T* out) const
+bool RampFilterGrad<T>::calculate_on_cpu(const T* in, const double* filter, T* out) const
 {
-    const T* filter_ptr = filter + param_.ns;
+    const double* filter_ptr = filter + param_.ns;
     const T* in_ptr = in;
     T* out_ptr = out;
     // variables
@@ -116,8 +110,10 @@ bool RampFilterGrad<T>::calculate_on_cpu(const T* in, const T* filter, T* out) c
             for (ipos = -static_cast<int>(param_.ns); ipos <= static_cast<int>(param_.ns); ++ipos) {
                 // change '-' into '+', others are the same
                 ipos2 = is + ipos;
-                if (ipos2 >= 0 && ipos2 < static_cast<int>(param_.ns))
-                    sum += in_ptr[ipos2] * filter_ptr[ipos];
+                if (ipos2 >= 0 && ipos2 < static_cast<int>(param_.ns)) {
+                    if (filter_ptr[ipos] > 0 || filter_ptr[ipos] < 0)
+                        sum += in_ptr[ipos2] * filter_ptr[ipos];
+                }
             }
             *out_ptr = sum * param_.ds;
             ++out_ptr;
